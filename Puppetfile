@@ -2,7 +2,6 @@ forge "http://forge.puppetlabs.com"
 
 mod "puppet-hiera"
 mod "puppet-r10k"
-mod "puppet-make"
 mod "puppetlabs-concat"
 mod "puppetlabs-stdlib"
 mod "puppetlabs-ruby"
