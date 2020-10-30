@@ -12,3 +12,17 @@ mod "puppetlabs-vcsrepo"
 mod "puppetlabs-postgresql"
 mod "puppetlabs-git"
 mod "gentoo-portage"
+
+# Add Roles/Profiles and CIS Hardening
+
+mod 'roles',
+  :git => 'https://github.com/cvquesty/ossec_roles.git',
+  :ref => 'production'
+
+mod 'profiles',
+  :git => 'https://github.com/cvquesty/ossec_profiles.git',
+  :ref => 'production'
+
+mod 'cis_hardening',
+  :git => 'https://github.com/cvquesty/cis_hardening.git',
+  :ref => 'production'
