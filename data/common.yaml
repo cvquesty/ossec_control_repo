@@ -1,3 +1,4 @@
 ---
+environment: 'development'
 classes:
 - 'cis_hardening'
