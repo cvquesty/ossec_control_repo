@@ -1,2 +1,3 @@
 ---
-classes: 'cis_hardening'
+classes:
+- 'cis_hardening'
