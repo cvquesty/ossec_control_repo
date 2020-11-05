@@ -1,4 +1,2 @@
 ---
 environment: 'production'
-classes:
-  - 'cis_hardening'
