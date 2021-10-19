@@ -1,0 +1,2464 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: cd4pe-issuer
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-issuer
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-migrate
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-object-store-backup
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-proxy
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe
+rules:
+- apiGroups:
+  - batch
+  resourceNames:
+  - cd4pe-migrate-object-store-v7
+  resources:
+  - jobs
+  verbs:
+  - get
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: cd4pe-issuer
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-issuer
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resourceNames:
+  - ingress-auto-tls
+  resources:
+  - secrets
+  verbs:
+  - get
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-migrate
+rules:
+- apiGroups:
+  - apps
+  resourceNames:
+  - minio
+  resources:
+  - statefulsets
+  verbs:
+  - list
+  - get
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-object-store-backup
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - list
+- apiGroups:
+  - ""
+  resourceNames:
+  - object-store
+  resources:
+  - secrets
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resourceNames:
+  - cd4pe-object-store
+  resources:
+  - secrets
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-proxy
+rules:
+- apiGroups:
+  - ""
+  resourceNames:
+  - ingress-auto-tls
+  resources:
+  - secrets
+  verbs:
+  - get
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-object-store-backup
+rules:
+- apiGroups:
+  - ceph.rook.io
+  resources:
+  - cephobjectstoreusers
+  verbs:
+  - create
+  - list
+- apiGroups:
+  - ceph.rook.io
+  resourceNames:
+  - cd4pe-object-store
+  resources:
+  - cephobjectstoreusers
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - secrets
+  verbs:
+  - list
+- apiGroups:
+  - ""
+  resourceNames:
+  - rook-ceph
+  resources:
+  - namespaces
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resourceNames:
+  - rook-ceph-object-user-rook-ceph-store-cd4pe-object-store
+  resources:
+  - secrets
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cd4pe
+subjects:
+- kind: ServiceAccount
+  name: cd4pe
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: cd4pe-issuer
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-issuer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cd4pe-issuer
+subjects:
+- kind: ServiceAccount
+  name: cd4pe-issuer
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-migrate
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cd4pe-migrate
+subjects:
+- kind: ServiceAccount
+  name: cd4pe-migrate
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-object-store-backup
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cd4pe-object-store-backup
+subjects:
+- kind: ServiceAccount
+  name: cd4pe-object-store-backup
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-proxy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cd4pe-proxy
+subjects:
+- kind: ServiceAccount
+  name: cd4pe-proxy
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-object-store-backup
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cd4pe-object-store-backup
+subjects:
+- kind: ServiceAccount
+  name: cd4pe-object-store-backup
+  namespace: default
+---
+apiVersion: v1
+data:
+  log4j.properties: |
+    status = error
+    dest = err
+    name = PropertiesConfig
+    monitorInterval = 60
+
+    filter.threshold.type = ThresholdFilter
+    filter.threshold.level = debug
+
+    appender.console.type = Console
+    appender.console.name = STDOUT
+    appender.console.layout.type = PatternLayout
+    appender.console.layout.pattern = %d{yyyy-MM-dd HH:mm:ss.S z}:[%p]:[%t]:%c:%m%n
+    appender.console.filter.threshold.type = ThresholdFilter
+    appender.console.filter.threshold.level = DEBUG
+
+    rootLogger.level = info
+    rootLogger.appenderRef.stdout.ref = STDOUT
+
+    loggers = authServletFilter, privilegeCheckFilter,credentials,repo,vcs,pipelinesPfi,pipelinesCdpe,cdpe,auth,config,apppipeline,puppetEnterprise,ldapManager,apache
+
+    logger.authServletFilter.name = com.distelli.servlet.DistelliAuthServletFilter
+    logger.authServletFilter.level = warn
+    logger.authServletFilter.additivity = false
+    logger.authServletFilter.appenderRef.console.ref = STDOUT
+
+    logger.privilegeCheckFilter.name = com.puppet.pipelines.pfi.filters.PrivilegeCheckFilter
+    logger.privilegeCheckFilter.level =  debug
+    logger.privilegeCheckFilter.additivity = false
+    logger.privilegeCheckFilter.appenderRef.console.ref = STDOUT
+
+    logger.credentials.name = com.puppet.pipelines.credentials
+    logger.credentials.level =  debug
+    logger.credentials.additivity = false
+    logger.credentials.appenderRef.console.ref = STDOUT
+
+    logger.repo.name = com.distelli.repo
+    logger.repo.level =  debug
+    logger.repo.additivity = false
+    logger.repo.appenderRef.console.ref = STDOUT
+
+    logger.vcs.name = com.puppet.pipelines.vcs
+    logger.vcs.level =  debug
+    logger.vcs.additivity = false
+    logger.vcs.appenderRef.console.ref = STDOUT
+
+    logger.pipelinesPfi.name = com.puppet.pipelines.pfi
+    logger.pipelinesPfi.level =  debug
+    logger.pipelinesPfi.additivity = false
+    logger.pipelinesPfi.appenderRef.console.ref = STDOUT
+
+    logger.pipelinesCdpe.name = com.puppet.pipelines.cdpe
+    logger.pipelinesCdpe.level =  debug
+    logger.pipelinesCdpe.additivity = false
+    logger.pipelinesCdpe.appenderRef.console.ref = STDOUT
+
+    logger.cdpe.name = com.puppet.cdpe
+    logger.cdpe.level =  debug
+    logger.cdpe.additivity = false
+    logger.cdpe.appenderRef.console.ref = STDOUT
+
+    logger.auth.name = com.puppet.cdpe.auth
+    logger.auth.level =  info
+    logger.auth.additivity = false
+    logger.auth.appenderRef.console.ref = STDOUT
+
+    logger.config.name = com.puppet.cdpe.config
+    logger.config.level = info
+    logger.config.additivity = false
+    logger.config.appenderRef.console.ref = STDOUT
+
+    logger.apppipeline.name = com.puppet.cdpe.apppipeline
+    logger.apppipeline.level = info
+    logger.apppipeline.additivity = false
+    logger.apppipeline.appenderRef.console.ref = STDOUT
+
+    logger.puppetEnterprise.name = com.puppet.enterprise
+    logger.puppetEnterprise.level = debug
+    logger.puppetEnterprise.additivity = false
+    logger.puppetEnterprise.appenderRef.console.ref = STDOUT
+
+    logger.ldapManager.name = com.distelli.ldap
+    logger.ldapManager.level = debug
+    logger.ldapManager.additivity = false
+    logger.ldapManager.appenderRef.console.ref = STDOUT
+
+    logger.apache.name = org.apache
+    logger.apache.level = warn
+    logger.apache.additivity = false
+    logger.apache.appenderRef.console.ref = STDOUT
+kind: ConfigMap
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-log4j
+---
+apiVersion: v1
+data:
+  10-cd4pe_database_init.sql: |
+    \c "cd4pe"
+    CREATE EXTENSION IF NOT EXISTS pgcrypto;
+kind: ConfigMap
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-postgres-initdb
+---
+apiVersion: v1
+data:
+  pg_hba.conf: |
+    # "local" is for Unix domain socket connections only
+    local   all             all                                     trust
+    host    all             all             127.0.0.1/32            trust
+    host    all             all             ::1/128                 trust
+    hostssl all             all             all                     cert map=usermap
+    host    all             all             all                     scram-sha-256
+  postgresql.conf: |
+    listen_addresses = '*'
+    wal_level = 'hot_standby'
+    max_wal_senders = '16'
+    wal_keep_segments = '12'
+    client_min_messages = 'error'
+    shared_preload_libraries = 'pgaudit'
+    include_dir = 'conf.d'
+    password_encryption = scram-sha-256             # md5 or scram-sha-256
+    shared_buffers = 128MB                  # min 128kB
+    max_wal_size = 1GB
+    min_wal_size = 80MB
+    log_timezone = 'Etc/UTC'
+    timezone = 'Etc/UTC'
+    lc_messages = 'en_US.utf8'                      # locale for system error message
+    lc_monetary = 'en_US.utf8'                      # locale for monetary formatting
+    lc_numeric = 'en_US.utf8'                       # locale for number formatting
+    lc_time = 'en_US.utf8'                          # locale for time formatting
+    default_text_search_config = 'pg_catalog.english'
+kind: ConfigMap
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: postgres-configuration
+---
+apiVersion: v1
+data:
+  00-restore.sh: |
+    #!/bin/bash
+    set -eo pipefail
+    echo "Checking for backup"
+    if [ -f /backup/backup.sql.gz ]; then
+      echo "Restoring backup"
+      gunzip < /backup/backup.sql.gz | psql -U postgres -d ${POSTGRESQL_DATABASE}
+    else
+      echo "No backup found"
+    fi
+  00-update-users.sh: |
+    #!/bin/bash
+    set -e
+
+    echo "Checking for 'postgres' user"
+    if ! psql -U postgres -d ${POSTGRESQL_DATABASE} -c '\du'; then
+      # If we can't login as the default superuser, assume POSTGRESQL_USERNAME is a superuser and create it
+      echo "Creating/updating 'postgres' user"
+      psql -U ${POSTGRESQL_USERNAME} -d ${POSTGRESQL_DATABASE} -c 'CREATE ROLE postgres;' -c 'ALTER ROLE postgres LOGIN SUPERUSER CREATEROLE CREATEDB REPLICATION BYPASSRLS;'
+    fi
+
+    if [ "${POSTGRESQL_USERNAME}" != "postgres" ]; then
+      # If the service user differs from default superuser, associate POSTGRESQL_POSTGRES_PASSWORD
+      # with the superuser and reduce permissions for the service user.
+      echo "Updating password for user 'postgres'"
+      psql -U postgres -c "ALTER ROLE postgres PASSWORD '${POSTGRESQL_POSTGRES_PASSWORD}';"
+
+      echo "Updating privileges and password for user '${POSTGRESQL_USERNAME}'"
+      psql -U postgres -c "CREATE ROLE ${POSTGRESQL_USERNAME};" \
+        -c "ALTER ROLE ${POSTGRESQL_USERNAME} NOSUPERUSER NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD '${POSTGRESQL_PASSWORD}';"
+    else
+      psql -U postgres -d ${POSTGRESQL_DATABASE} -c "ALTER ROLE postgres PASSWORD '${POSTGRESQL_PASSWORD}';"
+    fi
+kind: ConfigMap
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: postgres-init
+---
+apiVersion: v1
+data:
+  pg_hba.conf: |
+    # "local" is for Unix domain socket connections only
+    local   all             all                                     trust
+    host    all             all             127.0.0.1/32            trust
+    host    all             all             ::1/128                 trust
+    hostssl all             all             all                     cert map=usermap
+    host    all             all             all                     scram-sha-256
+  postgresql.conf: |
+    listen_addresses = '*'
+    wal_level = 'hot_standby'
+    max_wal_senders = '16'
+    wal_keep_segments = '12'
+    client_min_messages = 'error'
+    shared_preload_libraries = 'pgaudit'
+    include_dir = 'conf.d'
+    password_encryption = scram-sha-256             # md5 or scram-sha-256
+    shared_buffers = 128MB                  # min 128kB
+    max_wal_size = 1GB
+    min_wal_size = 80MB
+    log_timezone = 'Etc/UTC'
+    timezone = 'Etc/UTC'
+    lc_messages = 'en_US.utf8'                      # locale for system error message
+    lc_monetary = 'en_US.utf8'                      # locale for monetary formatting
+    lc_numeric = 'en_US.utf8'                       # locale for number formatting
+    lc_time = 'en_US.utf8'                          # locale for time formatting
+    default_text_search_config = 'pg_catalog.english'
+kind: ConfigMap
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query-postgres-configuration
+---
+apiVersion: v1
+data:
+  00-restore.sh: |
+    #!/bin/bash
+    set -eo pipefail
+    echo "Checking for backup"
+    if [ -f /backup/backup.sql.gz ]; then
+      echo "Restoring backup"
+      gunzip < /backup/backup.sql.gz | psql -U postgres -d ${POSTGRESQL_DATABASE}
+    else
+      echo "No backup found"
+    fi
+  00-update-users.sh: |
+    #!/bin/bash
+    set -e
+
+    echo "Checking for 'postgres' user"
+    if ! psql -U postgres -d ${POSTGRESQL_DATABASE} -c '\du'; then
+      # If we can't login as the default superuser, assume POSTGRESQL_USERNAME is a superuser and create it
+      echo "Creating/updating 'postgres' user"
+      psql -U ${POSTGRESQL_USERNAME} -d ${POSTGRESQL_DATABASE} -c 'CREATE ROLE postgres;' -c 'ALTER ROLE postgres LOGIN SUPERUSER CREATEROLE CREATEDB REPLICATION BYPASSRLS;'
+    fi
+
+    if [ "${POSTGRESQL_USERNAME}" != "postgres" ]; then
+      # If the service user differs from default superuser, associate POSTGRESQL_POSTGRES_PASSWORD
+      # with the superuser and reduce permissions for the service user.
+      echo "Updating password for user 'postgres'"
+      psql -U postgres -c "ALTER ROLE postgres PASSWORD '${POSTGRESQL_POSTGRES_PASSWORD}';"
+
+      echo "Updating privileges and password for user '${POSTGRESQL_USERNAME}'"
+      psql -U postgres -c "CREATE ROLE ${POSTGRESQL_USERNAME};" \
+        -c "ALTER ROLE ${POSTGRESQL_USERNAME} NOSUPERUSER NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD '${POSTGRESQL_PASSWORD}';"
+    else
+      psql -U postgres -d ${POSTGRESQL_DATABASE} -c "ALTER ROLE postgres PASSWORD '${POSTGRESQL_PASSWORD}';"
+    fi
+kind: ConfigMap
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query-postgres-init
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJwcm94eS5yZXBsaWNhdGVkLmNvbSI6eyJhdXRoIjoiTVhsV01GQnNVVGxTZWt4WlVVWkRkak0wZUZWYVFUaGFiMVJDT2pGNVZqQlFiRkU1VW5wTVdWRkdRM1l6TkhoVldrRTRXbTlVUWc9PSJ9LCJyZWdpc3RyeS5yZXBsaWNhdGVkLmNvbSI6eyJhdXRoIjoiTVhsV01GQnNVVGxTZWt4WlVVWkRkak0wZUZWYVFUaGFiMVJDT2pGNVZqQlFiRkU1VW5wTVdWRkdRM1l6TkhoVldrRTRXbTlVUWc9PSJ9fX0=
+kind: Secret
+metadata:
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-9999"
+    kots.io/app-slug: cd4pe
+  creationTimestamp: null
+  labels:
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-registry
+  namespace: default
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJwcm94eS5yZXBsaWNhdGVkLmNvbSI6eyJhdXRoIjoiTVhsV01GQnNVVGxTZWt4WlVVWkRkak0wZUZWYVFUaGFiMVJDT2pGNVZqQlFiRkU1VW5wTVdWRkdRM1l6TkhoVldrRTRXbTlVUWc9PSJ9LCJyZWdpc3RyeS5yZXBsaWNhdGVkLmNvbSI6eyJhdXRoIjoiTVhsV01GQnNVVGxTZWt4WlVVWkRkak0wZUZWYVFUaGFiMVJDT2pGNVZqQlFiRkU1VW5wTVdWRkdRM1l6TkhoVldrRTRXbTlVUWc9PSJ9fX0=
+kind: Secret
+metadata:
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-9999"
+    kots.io/app-slug: cd4pe
+  creationTimestamp: null
+  labels:
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: kotsadm-replicated-registry
+  namespace: default
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-config
+stringData:
+  license.json: |
+    {
+      "licenseID": "1yV0PlQ9RzLYQFCv34xUZA8ZoTB",
+      "customerName": "Jerald Sheets <jerald.sheets@puppet-partners.com>",
+      "expiresAt": "2021-10-22T00:00:00Z",
+      "channelName": "Stable",
+      "licenseType": "trial",
+      "installationID": "099dd680-826a-4de9-94ec-f16d63461edb",
+      "cd_entitlement": true,
+      "connect_entitlement": false,
+      "signature": {"licenseData":"eyJhcGlWZXJzaW9uIjoia290cy5pby92MWJldGExIiwia2luZCI6IkxpY2Vuc2UiLCJtZXRhZGF0YSI6eyJuYW1lIjoiamVyYWxkc2hlZXRzamVyYWxkc2hlZXRzcHVwcGV0LXBhcnRuZXJzY29tIn0sInNwZWMiOnsibGljZW5zZUlEIjoiMXlWMFBsUTlSekxZUUZDdjM0eFVaQThab1RCIiwibGljZW5zZVR5cGUiOiJ0cmlhbCIsImN1c3RvbWVyTmFtZSI6IkplcmFsZCBTaGVldHMgXHUwMDNjamVyYWxkLnNoZWV0c0BwdXBwZXQtcGFydG5lcnMuY29tXHUwMDNlIiwiYXBwU2x1ZyI6ImNkNHBlIiwiY2hhbm5lbElEIjoiMVlqSDREMWdJeW1pRXVhcUppd2h0WG1tU1p5IiwiY2hhbm5lbE5hbWUiOiJTdGFibGUiLCJsaWNlbnNlU2VxdWVuY2UiOjEsImVuZHBvaW50IjoiaHR0cHM6Ly9yZXBsaWNhdGVkLmFwcCIsImVudGl0bGVtZW50cyI6eyJDb250YWN0Ijp7InRpdGxlIjoiTGljZW5zZSBDb250YWN0IiwidmFsdWUiOiJqZXJhbGQuc2hlZXRzQHB1cHBldC1wYXJ0bmVycy5jb20iLCJ2YWx1ZVR5cGUiOiJTdHJpbmciLCJpc0hpZGRlbiI6dHJ1ZX0sImNkX2VudGl0bGVtZW50Ijp7InRpdGxlIjoiRW50aXRsZWQgdG8gQ29udGludW91cyBEZWxpdmVyeSBmb3IgUEUiLCJ2YWx1ZSI6dHJ1ZSwidmFsdWVUeXBlIjoiQm9vbGVhbiJ9LCJjZF9ub2RlX3ByaWNlIjp7InRpdGxlIjoiQ0QgZm9yIFBFIHBlciBub2RlIHByaWNlIiwidmFsdWUiOjAsInZhbHVlVHlwZSI6IkludGVnZXIiLCJpc0hpZGRlbiI6dHJ1ZX0sImNvbm5lY3RfZW50aXRsZW1lbnQiOnsidGl0bGUiOiJFbnRpdGxlZCB0byBQdXBwZXQgQ29ubmVjdCIsInZhbHVlIjpmYWxzZSwidmFsdWVUeXBlIjoiQm9vbGVhbiJ9LCJldWxhIjp7InRpdGxlIjoiRVVMQSIsInZhbHVlIjoiUHVwcGV0LCBJbmMuIE1hc3RlciBMaWNlbnNlIEFncmVlbWVudFxuXG5QTEVBU0UgUkVBRCBUSElTIE1BU1RFUiBMSUNFTlNFIEFHUkVFTUVOVCAoXCJBR1JFRU1FTlRcIikgQ0FSRUZVTExZIEJFRk9SRSBBQ0NFU1NJTkcsIERPV05MT0FESU5HIE9SIE9USEVSV0lTRSBVU0lORyBUSEUgQVBQTElDQUJMRSBTT0ZUV0FSRSBQUk9EVUNUIChUSEUgXCJTT0ZUV0FSRVwiKS4gQlkgQ0xJQ0tJTkcgVEhFIFwiSSBBQ0NFUFRcIiBCVVRUT04gT1IgQlkgRE9XTkxPQURJTkcgT1IgT1RIRVJXSVNFIFVTSU5HIFRIRSBTT0ZUV0FSRSwgWU9VIEFDQ0VQVCBUSElTIEFHUkVFTUVOVCBBTkQgQUNLTk9XTEVER0UgVEhBVCBZT1UgSEFWRSBSRUFELCBVTkRFUlNUQU5EIEFORCBBR1JFRSBUTyBCRSBCT1VORCBCWSBJVFMgVEVSTVMuIElGIFlPVSBBUkUgQU4gSU5ESVZJRFVBTCBBQ1RJTkcgT04gQkVIQUxGIE9GIEFOIEVOVElUWSwgWU9VIFJFUFJFU0VOVCBBTkQgV0FSUkFOVCBUSEFUIFlPVSBIQVZFIFRIRSBBVVRIT1JJVFkgVE8gRU5URVIgSU5UTyBUSElTIEFHUkVFTUVOVCBPTiBCRUhBTEYgT0YgVEhBVCBFTlRJVFkuIElGIFlPVSBETyBOT1QgSEFWRSBTVUNIIEFVVEhPUklUWSwgWU9VIEFSRSBTT0xFTFkgUkVTUE9OU0lCTEUgRk9SIFlPVVIgVVNFIE9GIFRIRSBTT0ZUV0FSRS4gSUYgWU9VIERPIE5PVCBBQ0NFUFQgVEhFIFRFUk1TIE9GIFRISVMgQUdSRUVNRU5ULCBUSEVOIFlPVSBBUkUgTk9UIFBFUk1JVFRFRCBUTyBBQ0NFU1MsIERPV05MT0FEIE9SIE9USEVSV0lTRSBVU0UgVEhFIFNPRlRXQVJFLlxuXG5cblRoaXMgQWdyZWVtZW50LCBpbmNsdWRpbmcgYWxsIHJlZmVyZW5jZWQgZG9jdW1lbnRzIGxvY2F0ZWQgYXQgdGhlIFVSTHMgbGlzdGVkIGJlbG93IGFuZCB0aGUgcHJvZHVjdCB0ZXJtcyAodGhlIGN1cnJlbnQgdmVyc2lvbnMgYXR0YWNoZWQgaGVyZXRvKSBsb2NhdGVkIGF0IGh0dHBzOi8vcHVwcGV0LmNvbS9sZWdhbCAoXCJQcm9kdWN0IFRlcm1zXCIpLCBpcyBiZXR3ZWVuIFB1cHBldCwgSW5jLiAoXCJQdXBwZXRcIikgYW5kIHlvdSwgdGhlIHB1cmNoYXNlciBvZiB0aGUgbGljZW5zZSB0byB0aGUgU29mdHdhcmUgKFwiQ3VzdG9tZXJcIikuIFRoaXMgQWdyZWVtZW50IGlzIGVmZmVjdGl2ZSAoXCJFZmZlY3RpdmUgRGF0ZVwiKSBhcyBvZiB0aGUgZGF0ZSB0aGF0IHRoZSBDdXN0b21lciBkb3dubG9hZHMgdGhlIFNvZnR3YXJlLlxuXG5cbkdFTkVSQUwgVEVSTVMgQU5EIENPTkRJVElPTlNcblxuXG4xLiBPUkRFUlMuIFxuQ3VzdG9tZXIgbWF5IHB1cmNoYXNlIGxpY2Vuc2VzIHRvIHRoZSBhcHBsaWNhYmxlIFNvZnR3YXJlIGZyb20gdGltZS10by10aW1lIGJ5IHNpZ25pbmcgYSB2YWxpZCBQdXBwZXQgcXVvdGUsIHN1Ym1pdHRpbmcgYSBwdXJjaGFzZSBvcmRlciBkaXJlY3RseSB0byBQdXBwZXQgdGhhdCBjb3JyZXNwb25kcyB0byBhIHZhbGlkIFB1cHBldCBxdW90ZSAoYW4gXCJPcmRlclwiKSBvciwgaWYgYXBwbGljYWJsZSwgdGhyb3VnaCBhbiBhdXRob3JpemVkIFB1cHBldCByZXNlbGxlci4gQWxsIHN1Y2ggcHVyY2hhc2VzIGFyZSBzdWJqZWN0IHRvIHRoZSBwcm92aXNpb25zIG9mIHRoaXMgQWdyZWVtZW50LiBUaGlzIEFncmVlbWVudCBzdXBlcnNlZGVzIGFueSBjb25mbGljdGluZyBwcm92aXNpb25zIG9uIGFuIE9yZGVyLCBhbmQgUHVwcGV0IHJlamVjdHMgYW55IGFkZGl0aW9uYWwgcHJvdmlzaW9ucyB0aGF0IGl0IGhhcyBub3QgZXhwcmVzc2x5IGFncmVlZCB0byBpbiB3cml0aW5nLiBUaGUgU29mdHdhcmUgaXMgZGVlbWVkIGFjY2VwdGVkIHVwb24gZG93bmxvYWQuXG4yLiBMSUNFTlNFLiBTdWJqZWN0IHRvIEN1c3RvbWVyJ3MgY29tcGxpYW5jZSB3aXRoIHRoaXMgQWdyZWVtZW50LCBQdXBwZXQgZ3JhbnRzIHRvIEN1c3RvbWVyIGEgd29ybGR3aWRlLCBsaW1pdGVkLCBub24tIHRyYW5zZmVyYWJsZSwgcmV2b2NhYmxlIGxpY2Vuc2UgdG8gdXNlIHRoZSBTb2Z0d2FyZSBpbiBhY2NvcmRhbmNlIHdpdGggdGhlIFByb2R1Y3QgVGVybXMgZm9yIHRoZSBhcHBsaWNhYmxlIFNvZnR3YXJlLlxuMy4gUkVTVFJJQ1RJT05TLiBUaGUgU29mdHdhcmUgaXMgbGljZW5zZWQsIG5vdCBzb2xkLiBFeGNlcHQgYXMgc3RhdGVkIG90aGVyd2lzZSBpbiB0aGlzIEFncmVlbWVudCwgQ3VzdG9tZXIgbWF5IG5vdCB1c2UgdGhlIFNvZnR3YXJlIG90aGVyIHRoYW4gZm9yIEN1c3RvbWVyJ3MgaW50ZXJuYWwgYnVzaW5lc3MgcHVycG9zZXMsIGFuZCBub3QgZm9yIHRoZSBwdXJwb3NlcyBvZiBhbnkgdGhpcmQgcGFydHkgbm9yIGZvciBhbnkgdGltZXNoYXJpbmcsIHJlbnRhbCwgSW50ZXJuZXQsIG9yIGFwcGxpY2F0aW9uIHNlcnZpY2UgcHJvdmlkZXIsIGNvbW1lcmNpYWwgaG9zdGluZyBzZXJ2aWNlcywgb3Igc2VydmljZSBidXJlYXUgYmFzaXMuIE90aGVyIHRoYW4gYXMgZ3JhbnRlZCBpbiBTZWN0aW9uIDIgYW5kIHRoZSBQcm9kdWN0IFRlcm1zLCBQdXBwZXQgYW5kIGl0cyBsaWNlbnNvcnMgcmV0YWluIGFsbCByaWdodCwgdGl0bGUgYW5kIGludGVyZXN0IGluIGFuZCB0byB0aGUgU29mdHdhcmUsIGluY2x1ZGluZyBhbGwgaW50ZWxsZWN0dWFsIHByb3BlcnR5IHJpZ2h0cywgcmVnaXN0ZXJlZCBvciB1bnJlZ2lzdGVyZWQsIGFuZCB3aGVyZXZlciBpbiB0aGUgd29ybGQgdGhvc2UgcmlnaHRzIG1heSBleGlzdCAoY29sbGVjdGl2ZWx5LCB0aGUgXCJQdXBwZXQgUmlnaHRzXCIpLiBUaGUgUHVwcGV0IFJpZ2h0cyBpbmNsdWRlIGdyYXBoaWNzLCB1c2VyIGFuZCB2aXN1YWwgaW50ZXJmYWNlcywgZGVzaWduLCBzdHJ1Y3R1cmUsIHNlbGVjdGlvbiwgY29vcmRpbmF0aW9uLCBleHByZXNzaW9uLCBcImxvb2sgYW5kIGZlZWxcIiwgYXJyYW5nZW1lbnQsIHRyYWRlbWFyaywgbG9nbyBhbmQgb3RoZXIgZGlzdGluY3RpdmUgYnJhbmQgZmVhdHVyZXMgb2YgdGhlIFNvZnR3YXJlIChjb2xsZWN0aXZlbHksIHRoZSBcIlB1cHBldCBNYXJrc1wiKS4gVGhpcyBBZ3JlZW1lbnQgZG9lcyBub3QgcGVybWl0IEN1c3RvbWVyIHRvIGRpc3RyaWJ1dGUgYW55IHByb2R1Y3Qgb3Igc2VydmljZSB1c2luZyB0aGUgUHVwcGV0IE1hcmtzLi4gUHVwcGV0IHNoYWxsIHJldGFpbiB0aXRsZSB0byBhbGwgY29waWVzIG9mIHRoZSBTb2Z0d2FyZSBwcm92aWRlZCB0byBDdXN0b21lciBvciBtYWRlIGJ5IEN1c3RvbWVyLiBUaGVyZSBhcmUgbm8gaW1wbGllZCByaWdodHMgb3IgbGljZW5zZXMgaW4gdGhpcyBBZ3JlZW1lbnQuIEFsbCByaWdodHMgYXJlIGV4cHJlc3NseSByZXNlcnZlZCBieSBQdXBwZXQuXG40LiBGRUVTIEFORCBQQVlNRU5ULiBDdXN0b21lciB3aWxsIHBheSBQdXBwZXQgKG9yIGFuIGF1dGhvcml6ZWQgcmVzZWxsZXIsIGlmIGFwcGxpY2FibGUpIGEgZmVlIGZvciBhIGxpY2Vuc2UgYW5kIHN1cHBvcnQgYW5kIG1haW50ZW5hbmNlIChwZXIgU2VjdGlvbiA1KSBhcyBzZXQgZm9ydGggaW4gdGhlIEFncmVlbWVudCBhbmQgdGhlIGFwcGxpY2FibGUgUHJvZHVjdCBUZXJtcy4gVGhlIGRlZmF1bHQgc3Vic2NyaXB0aW9uIHRlcm0gaXMgb25lIHllYXIuIFVubGVzcyBvdGhlcndpc2Ugc3RhdGVkIGluIHRoZSBPcmRlciwgdGhlIHN1YnNjcmlwdGlvbiB0ZXJtIHdpbGwgYXV0b21hdGljYWxseSByZW5ldyB1bmxlc3MgZWl0aGVyIHBhcnR5IGVsZWN0cyB0byBub3QgcmVuZXcgaXQgdXBvbiAzMCBkYXlzJyBub3RpY2UgcHJpb3IgdG8gdGhlIGVuZCBvZiB0aGUgdGhlbi1jdXJyZW50IHRlcm0uIEN1c3RvbWVyIGFncmVlcyB0byBwYXkgUHVwcGV0IChvciBhbiBhdXRob3JpemVkIHJlc2VsbGVyLCBpZiBhcHBsaWNhYmxlKSBhbGwgZmVlcyB3aXRoaW4gdGhpcnR5ICgzMCkgZGF5cyBvZiBpbnZvaWNlIGRhdGUuIEFsbCBwYXltZW50cyBzaGFsbCBiZSBtYWRlIGluIGN1cnJlbnRseSBhdmFpbGFibGUgZnVuZHMgcGF5YWJsZSBhdCB0aGUgYWRkcmVzcyBzZXQgZm9ydGggb24gUHVwcGV0J3MgaW52b2ljZS4gQWxsIGFtb3VudHMgcGF5YWJsZSBzaGFsbCBiZSBpbiB0aGUgY3VycmVuY3kgb2YgdGhlIFVuaXRlZCBTdGF0ZXMgYW5kIHNwZWNpZmljYWxseSBleGNsdWRlIChhbmQgQ3VzdG9tZXIgaXMgcmVzcG9uc2libGUgZm9yKSBhbnkgYW5kIGFsbCBhcHBsaWNhYmxlIHNhbGVzLCB1c2UgYW5kIG90aGVyIHRheGVzIChvdGhlciB0aGFuIHRheGVzIGJhc2VkIG9uIFB1cHBldCdzIGluY29tZSkuIEFueSBvdmVyZHVlIGFtb3VudHMgYXJlIHN1YmplY3QgdG8gYSBsYXRlIHBheW1lbnQgY2hhcmdlIG9mIHRoZSBsb3dlciBvZiAxLjUlIHBlciBtb250aCBhbmQgdGhlIGhpZ2hlc3QgaW50ZXJlc3QgcmF0ZSBwZXJtaXR0ZWQgYnkgYXBwbGljYWJsZSBsYXcuIEFsbCBmZWVzIGFyZSBub24tcmVmdW5kYWJsZS4gVGhlIGxpY2Vuc2UgZ3JhbnRlZCBoZXJlaW4gaXMgc3ViamVjdCB0byBDdXN0b21lciBtYWtpbmcgYWxsIHBheW1lbnRzIGR1ZSBhbmQgc2hhbGwgYXV0b21hdGljYWxseSB0ZXJtaW5hdGUgaWYgQ3VzdG9tZXIgZmFpbHMgdG8gbWFrZSBhbnkgcGF5bWVudHMgd2hlbiBkdWUsIGluY2x1ZGluZyBpbnN0YWxsbWVudCBwYXltZW50cywgd2hldGhlciBvd2VkIGRpcmVjdGx5IHRvIFB1cHBldCBvciBhbiBhdXRob3JpemVkIHJlc2VsbGVyLlxuNS4gU1VQUE9SVDsgQ0hBTkdFUy5cbiAgIDEuIFN1cHBvcnQgYW5kIE1haW50ZW5hbmNlLiBQdXBwZXQgd2lsbCBwcm92aWRlIEN1c3RvbWVyIHRoZSBzdXBwb3J0IGFuZCBtYWludGVuYW5jZSBzZXJ2aWNlcyAoXCJTdXBwb3J0IFNlcnZpY2VzXCIpIGxpc3RlZCBhdCBodHRwczovL3B1cHBldC5jb20vbGVnYWwsIGF0IGVpdGhlciB0aGUgXCJTdGFuZGFyZFwiIG9yIHRoZSBcIlByZW1pdW1cIiBsZXZlbCwgYXMgaW5kaWNhdGVkIGluIHRoZSBPcmRlci4gVGhlcmUgaXMgbm8gc3VwcG9ydCBvciBtYWludGVuYW5jZSBhdmFpbGFibGUgaW4gY29ubmVjdGlvbiB3aXRoIGEgRnJlZSBMaWNlbnNlIG9yIEZyZWUgVHJpYWwgKGFzIHRob3NlIHRlcm1zIGFyZSBkZWZpbmVkIGluIHRoZSBQcm9kdWN0IFRlcm1zKS4gSWYgU3VwcG9ydCBTZXJ2aWNlcyBhcmUgdGVybWluYXRlZCBmb3IgYW55IHJlYXNvbiwgYW55IGxhdGVyIHJlaW5zdGF0ZW1lbnQgaXMgYXQgUHVwcGV0J3Mgc29sZSBvcHRpb24gYW5kIGlzIGNvbmRpdGlvbmVkIG9uIChhKSBQdXBwZXQgb2ZmZXJpbmcgU3VwcG9ydCBTZXJ2aWNlcyB0byBpdHMgY3VzdG9tZXJzIGdlbmVyYWxseSBmb3IgdGhlIFNvZnR3YXJlIGluIHF1ZXN0aW9uLCBhbmQgKGIpIGlmIFN1cHBvcnQgU2VydmljZXMgaGF2ZSBiZWVuIHRlcm1pbmF0ZWQgZm9yIG1vcmUgdGhhbiB0aGlydHkgKDMwKSBkYXlzLCBDdXN0b21lciBwYXlpbmcgUHVwcGV0IGFsbCBhcHBsaWNhYmxlIFN1cHBvcnQgU2VydmljZXMgZmVlcyBmb3IgdGhlIHBlcmlvZCBkdXJpbmcgd2hpY2ggQ3VzdG9tZXIgd2FzIG9mZiBTdXBwb3J0IFNlcnZpY2VzLCBwbHVzIGZlZXMgZm9yIHRoZSBuZXcgU3VwcG9ydCBTZXJ2aWNlcyB0ZXJtLlxuICAgMi4gTW9kdWxlcyBhbmQgQ3VzdG9tZXIgQ2hhbmdlcy4gUHVwcGV0IG1heSBtYWtlIGF2YWlsYWJsZSBjZXJ0YWluIG1vZHVsZXMgKFwiTW9kdWxlc1wiKSB0aGF0IG1heSBiZSB1c2VkIGluIGNvbm5lY3Rpb24gd2l0aCB0aGUgU29mdHdhcmUsIGVpdGhlciBidW5kbGVkIHdpdGggdGhlIFNvZnR3YXJlIChpbmNsdWRpbmcgaW4gYW4gdXBkYXRlIG9yIHVwZ3JhZGUgbGF0ZXIgcHJvdmlkZWQpIG9yIHRocm91Z2ggaXRzIHdlYnNpdGUgZm9yZ2UucHVwcGV0LmNvbSAoXCJQdXBwZXQgRm9yZ2VcIikuIEFueSBNb2R1bGVzIGJ1bmRsZWQgd2l0aCB0aGUgU29mdHdhcmUgYXJlIGxpY2Vuc2VkIHVuZGVyIHRoaXMgQWdyZWVtZW50LCBhbmQgYW55IE1vZHVsZXMgb2J0YWluZWQgdGhyb3VnaCB0aGUgUHVwcGV0IEZvcmdlIGFyZSBzdWJqZWN0IHRvIHRoZWlyIGFjY29tcGFueWluZyBsaWNlbnNlLiBFeGNlcHQgZm9yIE1vZHVsZXMgdGhhdCBhcmUgYnVuZGxlZCB3aXRoIHRoZSBTb2Z0d2FyZSBvciB3aGVyZSBvdGhlcndpc2UgaW5kaWNhdGVkIGJ5IFB1cHBldCBvbiB0aGUgUHVwcGV0IEZvcmdlLCBQdXBwZXQgaXMgbm90IGxpYWJsZSB0byBzdXBwb3J0IGFueSBNb2R1bGUsIG5vciBhcmUgc3VjaCBNb2R1bGVzIGNvdmVyZWQgYnkgdGhlIHdhcnJhbnR5IGFuZCBpbmRlbW5pdHkgdGVybXMgb2YgdGhpcyBBZ3JlZW1lbnQuIEZ1cnRoZXJtb3JlLCBQdXBwZXQgaXMgbm90IHJlc3BvbnNpYmxlIHRvIHN1cHBvcnQsIGFuZCBpcyBub3QgbGlhYmxlIHVuZGVyIHRoaXMgQWdyZWVtZW50IGluIGFueSB3YXkgKGluY2x1ZGluZyB3YXJyYW50eSBhbmQgaW5kZW1uaXR5KSBmb3IsIGFueSBjaGFuZ2VzIG1hZGUgYnkgQ3VzdG9tZXIgdG8gdGhlIFNvZnR3YXJlLlxuNi4gV0FSUkFOVFk7IERJU0NMQUlNRVJcbiAgIDEuIEdlbmVyYWwgV2FycmFudGllcy4gUHVwcGV0IHJlcHJlc2VudHMgYW5kIHdhcnJhbnRzIHRoYXQgaXQgaGFzIHN1ZmZpY2llbnQgb3duZXJzaGlwIG9yIGF1dGhvcml0eSB0byBncmFudCB0byBDdXN0b21lciB0aGUgbGljZW5zZSBzdGF0ZWQgaW4gdGhlIGFwcGxpY2FibGUgUHJvZHVjdCBUZXJtcy4gRWFjaCBwYXJ0eSByZXByZXNlbnRzIGFuZCB3YXJyYW50cyB0aGF0OiAoYSkgaXQgaGFzIHRoZSBmdWxsIHBvd2VyIGFuZCBhdXRob3JpdHkgdG8gZW50ZXIgaW50byB0aGlzIEFncmVlbWVudCBhbmQgdG8gY2Fycnkgb3V0IGl0cyBvYmxpZ2F0aW9ucyB1bmRlciB0aGlzIEFncmVlbWVudDsgYW5kIChiKSBpdCBoYXMgY29tcGxpZWQsIGFuZCB3aWxsIGluIHRoZSBmdXR1cmUgY29tcGx5LCB3aXRoIGFsbCBhcHBsaWNhYmxlIGxhd3MgaW4gY29ubmVjdGlvbiB3aXRoIHRoZSBleGVjdXRpb24sIGRlbGl2ZXJ5IGFuZCBwZXJmb3JtYW5jZSBvZiB0aGlzIEFncmVlbWVudC5cbiAgIDIuIFByb2R1Y3QgV2FycmFudHkuIFB1cHBldCB3YXJyYW50cyB0byB0aGUgQ3VzdG9tZXIgdGhhdCB0aGUgU29mdHdhcmUgd2lsbCBwZXJmb3JtIGluIGFsbCBtYXRlcmlhbCByZXNwZWN0cyBhcyBzcGVjaWZpZWQgaW4gaXRzIGFjY29tcGFueWluZyBkb2N1bWVudGF0aW9uIHVuZGVyIG5vcm1hbCB1c2UgZm9yIGEgcGVyaW9kIG9mIHRoaXJ0eSAoMzApIGNhbGVuZGFyIGRheXMgZnJvbSBpbml0aWFsIHJlY2VpcHQgb3IgYWNjZXNzLiBDdXN0b21lcidzIGV4Y2x1c2l2ZSByZW1lZHkgZm9yIGEgYnJlYWNoIG9mIHRoaXMgbGltaXRlZCB3YXJyYW50eSBpcyB0byByZXR1cm4gYW55IGFsbGVnZWRseSBkZWZlY3RpdmUgU29mdHdhcmUgYW5kIFB1cHBldCwgYXQgaXRzIG9wdGlvbiwgd2lsbCByZXBsYWNlIGl0IG9yIHJlZnVuZCBhbnkgZmVlIHBhaWQgZm9yIHRoZSBTb2Z0d2FyZS4gVGhpcyB3YXJyYW50eSBhcHBsaWVzIHRvIFRoaXJkIFBhcnR5IFNvZnR3YXJlIG9ubHkgdG8gdGhlIGV4dGVudCBpdHMgZmFpbHVyZSB0byBvcGVyYXRlIGNhdXNlcyB0aGUgU29mdHdhcmUgdG8gZmFpbCB0byBjb25mb3JtIHRvIHRoaXMgd2FycmFudHkuXG4gICAzLiBEaXNjbGFpbWVyLiBFWENFUFQgQVMgRVhQUkVTU0xZIFNFVCBGT1JUSCBJTiBTRUNUSU9OIDYsIFBVUFBFVCBESVNDTEFJTVMgQU5ZIEFORCBBTEwgV0FSUkFOVElFUyBBTkQgUkVQUkVTRU5UQVRJT05TIFdJVEggUkVTUEVDVCBUTyBUSEUgU09GVFdBUkUgKElOQ0xVRElORyBSRVBPUlRTLCBBTkFMWVNJUyBPUiBDT05URU5UIEdFTkVSQVRFRCBCWSBUSEUgU09GVFdBUkUpLCBJTkNMVURJTkcgVEhFIFdBUlJBTlRJRVMgT0YgRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UsIE5PTi1JTkZSSU5HRU1FTlQsIFRJVExFLCBBQ0NVUkFDWSwgTUVSQ0hBTlRBQklMSVRZIEFORCBUSE9TRSBUSEFUIE1BWSBBUklTRSBGUk9NIEFOWSBDT1VSU0UgT0YgREVBTElORyBPUiBQRVJGT1JNQU5DRS4gVEhFIFNPRlRXQVJFIEVYQ0xVREVTIEFOWSBOT04tUFVQUEVUIEFQUExJQ0FUSU9OUyBPUiBQTEFURk9STVMgQU5EIEFOWSBBQ1FVSVNJVElPTiBPUiBVU0UgT0YgVEhPU0UgQVBQTElDQVRJT05TIE9SIFBMQVRGT1JNUyBJUyBTT0xFTFkgVEhFIFJFU1BPTlNJQklMSVRZIE9GIENVU1RPTUVSIEFORCBUSEUgUFJPVklERVIgT0YgU1VDSCBBUFBMSUNBVElPTlMgT1IgUExBVEZPUk1TLiAgUFVQUEVUIE1BS0VTIE5PIFdBUlJBTlRZIFJFR0FSRElORyBUSEUgSU5URVJPUEVSQUJJTElUWSBPRiBUSEUgU09GVFdBUkUgV0lUSCAoT1IgQU5ZIENPTlRFTlQgR0VORVJBVEVEIEZST00pIEFOWSBOT04tUFVQUEVUIEFQUExJQ0FUSU9OUyBPUiBQTEFURk9STVMuICBQVVBQRVQgRE9FUyBOT1QgV0FSUkFOVCBPUiBTVVBQT1JUIE5PTi1QVVBQRVQgQVBQTElDQVRJT05TIE9SIFBMQVRGT1JNUy5cbjcuIElOREVNTklGSUNBVElPTi5cbiAgIDEuIE9ibGlnYXRpb24uIFN1YmplY3QgdG8gdGhlIGNvbmRpdGlvbnMgYW5kIGV4Y2VwdGlvbnMgbGlzdGVkIGJlbG93LCBQdXBwZXQgd2lsbCBkZWZlbmQgQ3VzdG9tZXIgYW5kIEN1c3RvbWVyJ3Mgc2hhcmVob2xkZXJzLCBkaXJlY3RvcnMsIGFuZCBlbXBsb3llZXMgKHRoZSBcIkRlZmVuZGFudHNcIikgYWdhaW5zdCBhIHRoaXJkIHBhcnR5J3MgY2xhaW0gdGhhdCBDdXN0b21lcidzIHVzZSBvZiB0aGUgU29mdHdhcmUgKGluIHRoZSBmb3JtIGRlbGl2ZXJlZCB0byBDdXN0b21lciBhbmQgYXMgYXV0aG9yaXplZCBpbiB0aGlzIEFncmVlbWVudCkgaW5mcmluZ2VzIG9yIG1pc2FwcHJvcHJpYXRlcyB0aGUgdGhpcmQgcGFydHkncyBjb3B5cmlnaHQgb3IgVW5pdGVkIFN0YXRlcyB0cmFkZSBzZWNyZXQgcmlnaHRzLCBvciBkaXJlY3RseSBpbmZyaW5nZXMgYSB2YWxpZCBVbml0ZWQgU3RhdGVzIHBhdGVudCB0aGF0IGlzc3VlZCBhcyBvZiB0aGUgRWZmZWN0aXZlIERhdGUgKGluIGVhY2ggY2FzZSwgYSBcIkNsYWltXCIpLCBhbmQgd2lsbCBmdXJ0aGVyIGluZGVtbmlmeSB0aGUgRGVmZW5kYW50cyBhZ2FpbnN0IGFueSBkYW1hZ2VzLCBmZWVzIChpbmNsdWRpbmcgcmVhc29uYWJsZSBhdHRvcm5leSBmZWVzKSwgY29zdHMgYW5kIGV4cGVuc2VzIHdoaWNoIGFyZSBpbmNsdWRlZCBpbiBhIGZpbmFsIGF3YXJkLCBqdWRnbWVudCBvciBzZXR0bGVtZW50IG9mIGEgQ2xhaW0uXG4gICAyLiBDb25kaXRpb25zLiBQdXBwZXQncyBvYmxpZ2F0aW9ucyBpbiBTZWN0aW9uIDcuMSBhcmUgY29uZGl0aW9uZWQgb24gKGEpIEN1c3RvbWVyIG5vdGlmeWluZyBQdXBwZXQgaW1tZWRpYXRlbHkgdXBvbiByZWNlaXZpbmcgYSBDbGFpbSBhbmQgcHJvdmlkaW5nIFB1cHBldCB3aXRoIGEgd3JpdHRlbiBjb3B5IG9mIHRoZSBDbGFpbSwgKGIpIEN1c3RvbWVyIGNvb3BlcmF0aW5nIHdpdGggUHVwcGV0IGluIHRoZSBkZWZlbnNlIG9yIHNldHRsZW1lbnQgb2YgdGhlIENsYWltLCBhbmQgKGMpIEN1c3RvbWVyIHByb3ZpZGluZyBQdXBwZXQgd2l0aCBhbGwgbmVjZXNzYXJ5IGF1dGhvcml0eSBmb3IgUHVwcGV0IHRvIGRlZmVuZCBvciBzZXR0bGUgdGhlIGNsYWltLiBDdXN0b21lciBtYXkgcGFydGljaXBhdGUgaW4gdGhlIGRlZmVuc2Ugb3Igc2V0dGxlbWVudCBvZiB0aGUgQ2xhaW0gYXQgaXRzIG93biBleHBlbnNlLiBGb2xsb3dpbmcgbm90aWNlIG9mIGEgQ2xhaW0sIG9yIGlmIGluIGl0cyBkaXNjcmV0aW9uIFB1cHBldCBkZXRlcm1pbmVzIHRoYXQgYSBDbGFpbSBpcyBsaWtlbHksIFB1cHBldCBtYXksIGF0IGl0cyBzb2xlIG9wdGlvbiwgcHJvY3VyZSBmb3IgQ3VzdG9tZXIgdGhlIHJpZ2h0IHRvIGNvbnRpbnVlIHRvIHVzZSB0aGUgU29mdHdhcmUgYXMgZnVybmlzaGVkLCBvciByZXBsYWNlIG9yIG1vZGlmeSB0aGUgU29mdHdhcmUgdG8gbWFrZSBpdCBub24taW5mcmluZ2luZywgb3IgdGVybWluYXRlIHRoaXMgQWdyZWVtZW50IGFuZCByZWZ1bmQgdG8gQ3VzdG9tZXIgYW55IGFtb3VudHMgdGhhdCBDdXN0b21lciBwcmUtcGFpZCBmb3IgYW4gdW51c2VkIGxpY2Vuc2UgYW5kIHN1cHBvcnQgYW5kIG1haW50ZW5hbmNlIHRlcm0uXG4gICAzLiBFeGNlcHRpb25zLiBQdXBwZXQgaGFzIG5vIG9ibGlnYXRpb24gdW5kZXIgU2VjdGlvbiA3LjEgd2l0aCByZXNwZWN0IHRvIGFueSBDbGFpbSBiYXNlZCB1cG9uIG9yIG90aGVyd2lzZSByZWxhdGluZyB0bzogKGEpIGFueSB1c2Ugb2YgdGhlIFNvZnR3YXJlIHRoYXQgaXMgbm90IGF1dGhvcml6ZWQgYnkgdGhpcyBBZ3JlZW1lbnQ7IChiKSB0aGUgY29tYmluYXRpb24gb2YgdGhlIFNvZnR3YXJlIHdpdGggb3RoZXIgcHJvZHVjdHMsIHNlcnZpY2VzLCBlcXVpcG1lbnQsIHNvZnR3YXJlLCBvciBkYXRhIG5vdCBzdXBwbGllZCBieSBQdXBwZXQ7IChjKSBhbnkgbW9kaWZpY2F0aW9uIG9mIHRoZSBTb2Z0d2FyZSBieSBhbnkgcGVyc29uIG90aGVyIHRoYW4gUHVwcGV0IG9yIGl0cyBhdXRob3JpemVkIGFnZW50czsgKGQpIGFueSBUaGlyZCBQYXJ0eSBTb2Z0d2FyZTsgb3IgKGUpIGNvbnRpbnVlZCB1c2Ugb2YgdGhlIFNvZnR3YXJlIGJ5IEN1c3RvbWVyIGFmdGVyIFB1cHBldCBoYXMgcHJvdmlkZWQgYSBub24taW5mcmluZ2luZyB2ZXJzaW9uIG9mIHRoZSBTb2Z0d2FyZSBhcyBzZXQgZm9ydGggaW4gU2VjdGlvbiA3LjIuXG4gICA0LiBUSElTIFNFQ1RJT04gUkVQUkVTRU5UUyBQVVBQRVQnUyBFTlRJUkUgTElBQklMSVRZIFRPIENVU1RPTUVSIEZPUiBJTkRFTU5JVFkgT0YgVEhJUkQgUEFSVFkgSU5URUxMRUNUVUFMIFBST1BFUlRZIENMQUlNUy5cbjguIExJTUlUQVRJT04gT0YgTElBQklMSVRZLiBFWENFUFQgQVMgU1RBVEVEIEJFTE9XLCBFQUNIIFBBUlRZJ1MgTElBQklMSVRZIFRPIFRIRSBPVEhFUiBVTkRFUiBUSElTIEFHUkVFTUVOVCBJUyBMSU1JVEVEIEFTIEZPTExPV1M6IChBKSBORUlUSEVSIFNIQUxMIEJFIExJQUJMRSBGT1IgQU5ZIElORElSRUNULCBJTkNJREVOVEFMLCBQVU5JVElWRSwgQ09OU0VRVUVOVElBTCwgUkVMSUFOQ0UsIE9SIFNQRUNJQUwgREFNQUdFUyAoSU5DTFVESU5HIEFOWSBEQU1BR0UgVE8gQlVTSU5FU1MgUkVQVVRBVElPTiwgTE9TVCBQUk9GSVRTLCBMT1NUIE9SIElOQUNDVVJBVEUgREFUQSBPUiBMT1NUIFNBVklOR1MpOyBBTkQgKEIpIE5FSVRIRVIgU0hBTEwgQkUgTElBQkxFIFRPIFRIRSBPVEhFUiBGT1IgQU5ZIEFNT1VOVFMgSU4gRVhDRVNTIE9GIFRIRSBHUkVBVEVSIE9GIEZJVkUgSFVORFJFRCBET0xMQVJTICgkNTAwKSBPUiBUSEUgQU1PVU5UUyBQQUlEIEJZIENVU1RPTUVSIFRPIFBVUFBFVCBJTiBUSEUgVFdFTFZFICgxMikgTU9OVEhTIFBSSU9SIFRPIFRIRSBFVkVOVCBHSVZJTkcgUklTRSBUTyBMSUFCSUxJVFkuIFRIRVNFIExJTUlUUyBETyBOT1QgQVBQTFkgVE8gQU5ZIExJQUJJTElUWSBUSEFUIEFSSVNFUyBGUk9NIEFOWSBDTEFJTSBGT1IgVU5QQUlEIEZFRVMgT1IgVEhFIFVOTElDRU5TRUQgVVNFIE9GIFRIRSBTT0ZUV0FSRS4gVEhFU0UgTElNSVRTIEFQUExZIFJFR0FSRExFU1MgT0YgVEhFIEZPUk0gT0YgQ0xBSU0gKENPTlRSQUNULCBUT1JUIE9SIE9USEVSV0lTRSkgQU5EIEVWRU4gSUYgVEhJUyBTRUNUSU9OIDggSVMgRk9VTkQgVE8gSEFWRSBGQUlMRUQgT0YgSVRTIEVTU0VOVElBTCBQVVJQT1NFLiBTT01FIEpVUklTRElDVElPTlMgTUFZIE5PVCBBTExPVyBUSEUgRVhDTFVTSU9OIE9SIExJTUlUQVRJT04gT0YgSU5DSURFTlRBTCwgU1BFQ0lBTCwgQ09OU0VRVUVOVElBTCwgT1IgT1RIRVIgREFNQUdFUywgU08gVEhFIEFCT1ZFIExJTUlUQVRJT05TIE9SIEVYQ0xVU0lPTlMgTUFZIE5PVCBBUFBMWS4gSU4gU1VDSCBFVkVOVCwgTElBQklMSVRZIFdJTEwgQkUgTElNSVRFRCBUTyBUSEUgR1JFQVRFU1QgRVhURU5UIFBFUk1JVFRFRCBCWSBBUFBMSUNBQkxFIExBVy5cblxuXG5cblxuOS4gRVhQT1JUIENPTlRST0wuIEFzIHJlcXVpcmVkIGJ5IHRoZSBsYXdzIG9mIHRoZSBVbml0ZWQgU3RhdGVzIGFuZCBvdGhlciBjb3VudHJpZXMsIEN1c3RvbWVyIHJlcHJlc2VudHMgYW5kIHdhcnJhbnRzIHRoYXQgQ3VzdG9tZXI6IChhKSB1bmRlcnN0YW5kcyB0aGF0IHRoZSBTb2Z0d2FyZSBhbmQgaXRzIGNvbXBvbmVudHMgbWF5IGJlIHN1YmplY3QgdG8gZXhwb3J0IGNvbnRyb2xzIHVuZGVyIHRoZSBVLlMuIENvbW1lcmNlIERlcGFydG1lbnQncyBFeHBvcnQgQWRtaW5pc3RyYXRpb24gUmVndWxhdGlvbnMgKFwiRUFSXCIpOyAoYikgaXMgbm90IGxvY2F0ZWQgaW4gYSBwcm9oaWJpdGVkIGRlc3RpbmF0aW9uIGNvdW50cnkgdW5kZXIgdGhlIEVBUiBvclxuVS5TLiBzYW5jdGlvbnMgcmVndWxhdGlvbnM7IChjKSB3aWxsIG5vdCBleHBvcnQsIHJlLWV4cG9ydCwgb3IgdHJhbnNmZXIgdGhlIFNvZnR3YXJlIHRvIGFueSBwcm9oaWJpdGVkIGRlc3RpbmF0aW9uIG9yIHBlcnNvbnMgb3IgZW50aXRpZXMgb24gdGhlIFUuUy4gQnVyZWF1IG9mIEluZHVzdHJ5IGFuZCBTZWN1cml0eSBEZW5pZWQgUGFydGllcyBMaXN0IG9yIEVudGl0eSBMaXN0LCBvciB0aGUgVS5TLiBPZmZpY2Ugb2YgRm9yZWlnbiBBc3NldHMgQ29udHJvbCBsaXN0IG9mIFNwZWNpYWxseSBEZXNpZ25hdGVkIE5hdGlvbmFscyBhbmQgQmxvY2tlZCBQZXJzb25zLCBvciBhbnkgc2ltaWxhciBsaXN0cyBtYWludGFpbmVkIGJ5IG90aGVyIGNvdW50cmllcywgd2l0aG91dCB0aGUgbmVjZXNzYXJ5IGV4cG9ydCBsaWNlbnNlKHMpIG9yIGF1dGhvcml6YXRpb24ocyk7IChkKSB3aWxsIG5vdCB1c2Ugb3IgdHJhbnNmZXIgdGhlIFNvZnR3YXJlIGZvciB1c2UgaW4gY29ubmVjdGlvbiB3aXRoIGFueSBudWNsZWFyLCBjaGVtaWNhbCBvciBiaW9sb2dpY2FsIHdlYXBvbnMsIG1pc3NpbGUgdGVjaG5vbG9neSwgb3IgbWlsaXRhcnkgZW5kLXVzZXMgd2hlcmUgcHJvaGliaXRlZCBieSBhbiBhcHBsaWNhYmxlIGFybXMgZW1iYXJnbywgdW5sZXNzIGF1dGhvcml6ZWQgYnkgdGhlIHJlbGV2YW50IGdvdmVybm1lbnQgYWdlbmN5IGJ5IHJlZ3VsYXRpb24gb3Igc3BlY2lmaWMgbGljZW5zZTsgYW5kIChlKSB1bmRlcnN0YW5kcyB0aGF0IGNvdW50cmllcyBpbmNsdWRpbmcgdGhlIFVuaXRlZCBTdGF0ZXMgbWF5IHJlc3RyaWN0IHRoZSBpbXBvcnQsIHVzZSwgb3IgZXhwb3J0IG9mIGVuY3J5cHRpb24gcHJvZHVjdHMgKHdoaWNoIG1heSBpbmNsdWRlIHRoZSBTb2Z0d2FyZSBhbmQgdGhlIGNvbXBvbmVudHMpIGFuZCBhZ3JlZXMgdGhhdCBDdXN0b21lciBzaGFsbCBiZSBzb2xlbHkgcmVzcG9uc2libGUgZm9yIGNvbXBsaWFuY2Ugd2l0aCBhbnkgc3VjaCBpbXBvcnQsIHVzZSwgb3IgZXhwb3J0IHJlc3RyaWN0aW9ucy5cbjEwLiBHT1ZFUk5NRU5UIFVTRVJTLiBUaGUgU29mdHdhcmUgY29udGFpbnMgXCJjb21tZXJjaWFsIGNvbXB1dGVyIHNvZnR3YXJlXCIgYXMgdGhhdCB0ZXJtIGlzIGRlc2NyaWJlZCBpbiBERkFSIDI1Mi4yMjctIDcwMTQoYSkoMSkuIElmIGFjcXVpcmVkIGJ5IG9yIG9uIGJlaGFsZiBvZiBhIGNpdmlsaWFuIGFnZW5jeSwgdGhlIFUuUy4gR292ZXJubWVudCBhY3F1aXJlcyB0aGlzIGNvbW1lcmNpYWwgY29tcHV0ZXIgc29mdHdhcmUgYW5kL29yIGNvbW1lcmNpYWwgY29tcHV0ZXIgc29mdHdhcmUgZG9jdW1lbnRhdGlvbiBzdWJqZWN0IHRvIHRoZSB0ZXJtcyBvZiB0aGlzIEFncmVlbWVudCBhcyBzcGVjaWZpZWQgaW4gNDggQy5GLlIuIDEyLjIxMiAoQ29tcHV0ZXIgU29mdHdhcmUpIGFuZCAxMi4xMSAoVGVjaG5pY2FsIERhdGEpIG9mIHRoZSBGZWRlcmFsIEFjcXVpc2l0aW9uIFJlZ3VsYXRpb25zIGFuZCBpdHMgc3VjY2Vzc29ycy4gSWYgYWNxdWlyZWQgYnkgb3Igb24gYmVoYWxmIG9mIGFueSBhZ2VuY3kgd2l0aGluIHRoZSBEZXBhcnRtZW50IG9mIERlZmVuc2UsIHRoZSBVLlMuIEdvdmVybm1lbnQgYWNxdWlyZXMgdGhpcyBjb21tZXJjaWFsIGNvbXB1dGVyIHNvZnR3YXJlIGFuZC9vciBjb21tZXJjaWFsIGNvbXB1dGVyIHNvZnR3YXJlIGRvY3VtZW50YXRpb24gc3ViamVjdCB0byB0aGUgdGVybXMgb2YgdGhpcyBBZ3JlZW1lbnQgYXMgc3BlY2lmaWVkIGluIDQ4IEMuRi5SLiAyMjcuNzIwMiBvZiB0aGUgRE9EIEZBUiBTdXBwbGVtZW50IGFuZCBpdHMgc3VjY2Vzc29ycy4gUHVwcGV0IGFiaWRlcyBieSB0aGUgcmVxdWlyZW1lbnRzIG9mIDQxIENGUiBcdTAwMjZzZWN0O1x1MDAyNnNlY3Q7IDYwLTEuNChhKSwgNjAtMzAwLjUoYSkgYW5kIDYwLTc0MS41KGEpLlxuMTEuIFRFUk1JTkFUSU9OLiBUaGlzIEFncmVlbWVudCBiZWdpbnMgb24gdGhlIEVmZmVjdGl2ZSBEYXRlIGFuZCBjb250aW51ZXMgaW4gZm9yY2UgdW50aWwgdGVybWluYXRlZCBieSBtdXR1YWwgYWdyZWVtZW50LCB1bmxlc3MgQ3VzdG9tZXIgb3IgUHVwcGV0IGVsZWN0cyBpbiB3cml0aW5nIHRvIHRlcm1pbmF0ZSBpdCBzb29uZXIgZHVlIHRvIChhKSB0aGUgb3RoZXIgcGFydHkncyBtYXRlcmlhbCBicmVhY2gsIHByb3ZpZGVkIHRoYXQgdGhlIHRlcm1pbmF0aW5nIHBhcnR5IGdpdmVzIHRoZSBicmVhY2hpbmcgcGFydHkgYXQgbGVhc3QgMzAgZGF5cyB3cml0dGVuIG5vdGljZSBhbmQgb3Bwb3J0dW5pdHkgdG8gY3VyZSwgb3IgKGIpIHRoZSBvdGhlciBwYXJ0eSBtYWtpbmcgYSBnZW5lcmFsIGFzc2lnbm1lbnQgZm9yIHRoZSBiZW5lZml0IG9mIGNyZWRpdG9ycywgc3VmZmVyaW5nIG9yIHBlcm1pdHRpbmcgdGhlIGFwcG9pbnRtZW50IG9mIGEgcmVjZWl2ZXIgZm9yIGl0cyBidXNpbmVzcyBvciBhc3NldHMsIG9yIGF2YWlsaW5nIGl0c2VsZiBvZiBvciBiZWNvbWluZyBzdWJqZWN0IHRvIGFueSBwcm9jZWVkaW5nIHVuZGVyIHRoZSBVUyBGZWRlcmFsIEJhbmtydXB0Y3kgQWN0IG9yIGFueSBvdGhlciBmb3JlaWduIG9yIGRvbWVzdGljIHN0YXR1dGUsIGxhdywgcnVsZSBvciByZWd1bGF0aW9uIHJlbGF0aW5nIHRvIGluc29sdmVuY3kgb3IgdGhlIHByb3RlY3Rpb24gb2YgcmlnaHRzIG9mIGNyZWRpdG9ycy4gQWxsIGZlZXMgYXJlIG5vbi1yZWZ1bmRhYmxlLiBVcG9uIHRlcm1pbmF0aW9uLCBvciBleHBpcmF0aW9uIG9mIHRoZSBhcHBsaWNhYmxlIHN1YnNjcmlwdGlvbiB0ZXJtLCBDdXN0b21lciBtdXN0IHVuaW5zdGFsbCB0aGUgU29mdHdhcmUgZnJvbSBDdXN0b21lcidzIGNvbXB1dGVyIHN5c3RlbXMuIFRoZSBmb2xsb3dpbmcgU2VjdGlvbnMgc3Vydml2ZSB0ZXJtaW5hdGlvbjogMywgNCwgNiwgNywgOCwgMTEsIGFuZCAxMy5cbjEyLiBBU1NJR05NRU5ULiBOZWl0aGVyIFBhcnR5IG1heSBhc3NpZ24gb3Igb3RoZXJ3aXNlIHRyYW5zZmVyIHRoaXMgQWdyZWVtZW50IG9yIGFueSBvZiBpdHMgcmlnaHRzIGhlcmV1bmRlciwgbm9yIGRlbGVnYXRlIGFueSBvZiBpdHMgb2JsaWdhdGlvbnMgaGVyZXVuZGVyLCB0byBhbnkgdGhpcmQgcGFydHkgd2l0aG91dCB0aGUgcHJpb3Igd3JpdHRlbiBjb25zZW50IG9mIHRoZSBvdGhlciBQYXJ0eTsgcHJvdmlkZWQsIGhvd2V2ZXIsIGVpdGhlciBQYXJ0eSBtYXkgYXNzaWduIHRoaXMgQWdyZWVtZW50IGFuZCBhbGwgb2Ygc3VjaCBQYXJ0eSdzIHJpZ2h0cyBhbmQgb2JsaWdhdGlvbnMgdG8gYW55IGFmZmlsaWF0ZSBvZiBzdWNoIFBhcnR5IG9yIHRvIGFueSB0aGlyZCBwYXJ0eSB3aGljaCBzdWNjZWVkcyBieSBvcGVyYXRpb24gb2YgbGF3IG9yIHB1cmNoYXNlcyBvciBvdGhlcndpc2UgYWNxdWlyZXMgYWxsIG9yIHN1YnN0YW50aWFsbHkgYWxsIG9mIHRoZSBhc3NldHMgb2Ygc3VjaCBQYXJ0eSBvciBhbiBhZmZpbGlhdGUgb2Ygc3VjaCBQYXJ0eSAod2hldGhlciBieSB3YXkgb2YgbWVyZ2VyLCBjb25zb2xpZGF0aW9uLCBzYWxlIG9mIGFzc2V0cywgb3Igb3RoZXIgY29ycG9yYXRlIHJlb3JnYW5pemF0aW9uIG9yIGNvbWJpbmF0aW9uKSBhbmQgYXNzdW1lcyBzdWNoIFBhcnR5J3Mgb2JsaWdhdGlvbnMgaGVyZXVuZGVyLiBBbnkgYXR0ZW1wdGVkIG9yIHB1cnBvcnRlZCBhc3NpZ25tZW50LCB0cmFuc2ZlciBvciBkZWxlZ2F0aW9uIHdpdGhvdXQgYW55IHJlcXVpcmVkIGNvbnNlbnQgaGF2aW5nIGZpcnN0IGJlZW4gb2J0YWluZWQgc2hhbGwgYmUgbnVsbCBhbmQgdm9pZCBhbmQgYSBtYXRlcmlhbCBicmVhY2ggb2YgdGhpcyBBZ3JlZW1lbnQuIFN1YmplY3QgdG8gdGhlIGZvcmVnb2luZywgdGhpcyBBZ3JlZW1lbnQgc2hhbGwgYmluZCBhbmQgaW51cmUgdG8gdGhlIGJlbmVmaXQgb2YgdGhlIFBhcnRpZXMgYW5kIHRoZWlyIHJlc3BlY3RpdmUgc3VjY2Vzc29ycyBhbmQgcGVybWl0dGVkIGFzc2lnbnMuXG4xMy4gR0VORVJBTC4gVGhlIGxhd3Mgb2YgdGhlIFN0YXRlIG9mIE9yZWdvbiwgVS5TLkEuLCBnb3Zlcm4gdGhpcyBBZ3JlZW1lbnQgKHdpdGhvdXQgcmVnYXJkIHRvIE9yZWdvbiBjb25mbGljdCBvZiBsYXdzIHJ1bGVzIGFuZCBleGNsdWRpbmcgdGhlIFVuaXRlZCBOYXRpb25zIENvbnZlbnRpb24gb24gQ29udHJhY3RzIGZvciB0aGUgSW50ZXJuYXRpb25hbCBTYWxlIG9mIEdvb2RzIGFuZCB0aGUgVW5pZm9ybSBDb21wdXRlciBJbmZvcm1hdGlvbiBUcmFuc2FjdGlvbnMgQWN0KS4gQ3VzdG9tZXIgYWdyZWVzIHRvIGV4Y2x1c2l2ZWx5IHJlc29sdmUgYWxsIGRpc3B1dGVzLCBjbGFpbXMgYW5kIGNvbnRyb3ZlcnNpZXMgYXJpc2luZyBmcm9tIG9yIHJlbGF0aW5nIHRvIHRoaXMgQWdyZWVtZW50IGluIHRoZSBzdGF0ZSBvciBmZWRlcmFsIGNvdXJ0cyBsb2NhdGVkIGluIE11bHRub21haCBDb3VudHksIE9yZWdvbiwgYW5kIEN1c3RvbWVyIGlycmV2b2NhYmx5IHdhaXZlcyBhbnkgb2JqZWN0aW9uIHRvIHN1Y2ggZXhjbHVzaXZlIGp1cmlzZGljdGlvbi4gQ3VzdG9tZXIgYWdyZWVzIHRoYXQgYW55IGJyZWFjaCBvZiBTZWN0aW9uIDMgb3Igb3RoZXIgaW5mcmluZ2VtZW50IG9yIG1pc2FwcHJvcHJpYXRpb24gb2YgdGhlIFB1cHBldCBSaWdodHMgd2lsbCByZXN1bHQgaW4gaW1tZWRpYXRlIGFuZCBpcnJlcGFyYWJsZSBkYW1hZ2UgdG8gUHVwcGV0IGZvciB3aGljaCB0aGVyZSBpcyBubyBhZGVxdWF0ZSByZW1lZHkgYXQgbGF3LiBDdXN0b21lciBhbmQgUHVwcGV0IG1heSBvbmx5IGFtZW5kIG9yIG1vZGlmeSB0aGlzIEFncmVlbWVudCwgb3Igd2FpdmUgYW55IHJpZ2h0IHVuZGVyIHRoaXMgQWdyZWVtZW50LCBpbiBhIHdyaXRpbmcgdGhhdCBpcyBzaWduZWQgYnkgYm90aCBwYXJ0aWVzIGFuZCB0aGF0IGV4cHJlc3NseSByZWZlcmVuY2VzIHRoaXMgQWdyZWVtZW50LiBObyB3YWl2ZXIgb2YgYW55IGJyZWFjaCBvZiBhbnkgcHJvdmlzaW9uIG9mIHRoaXMgQWdyZWVtZW50IHNoYWxsIGNvbnN0aXR1dGUgYSB3YWl2ZXIgb2YgYW55IHByaW9yLCBjb25jdXJyZW50IG9yIHN1YnNlcXVlbnQgYnJlYWNoIG9mIHRoZSBzYW1lIG9yIGFueSBvdGhlciBwcm92aXNpb25zLiBIZWFkaW5ncyBhcmUgdXNlZCBpbiB0aGlzIEFncmVlbWVudCBmb3IgcmVmZXJlbmNlIG9ubHkgYW5kIHdpbGwgbm90IGJlIGNvbnNpZGVyZWQgd2hlbiBpbnRlcnByZXRpbmcgdGhpcyBBZ3JlZW1lbnQuIEFzIHVzZWQgaW4gdGhpcyBBZ3JlZW1lbnQsIFwiaW5jbHVkZXNcIiAob3IgXCJpbmNsdWRpbmdcIikgbWVhbnMgd2l0aG91dCBsaW1pdGF0aW9uLiBUaGlzIEFncmVlbWVudCBjb25zdGl0dXRlcyB0aGUgZW50aXJlIGFncmVlbWVudCBiZXR3ZWVuIHRoZSBwYXJ0aWVzIHdpdGggcmVzcGVjdCB0byB0aGUgU29mdHdhcmUgYW5kIGl0cyByZWxhdGVkIHN1cHBvcnQgYW5kIG1haW50ZW5hbmNlLCBhbmQgc3VwZXJzZWRlcyBhbGwgcHJpb3IgYW5kIGNvbnRlbXBvcmFuZW91cyBhZ3JlZW1lbnRzIG9yIGNvbW11bmljYXRpb25zLlxuXG5cblxuXG5cblxuX19fX19fX19fX19fX19fX1xuXG5cblxuXG5QVVBQRVQgRU5URVJQUklTRVx1MDAyNnJlZzsgUFJPRFVDVCBURVJNUyBBTkQgQ09OVElOVU9VUyBERUxJVkVSWSBGT1IgUFVQUEVUIEVOVEVSUFJJU0VcdTAwMjZ0cmFkZTsgUFJPRFVDVCBURVJNU1xuXG5cblRoZXNlIFByb2R1Y3QgVGVybXMgYXBwbHkgb25seSB0byBDdXN0b21lcidzIGxpY2Vuc2Ugb2YgUHVwcGV0IEVudGVycHJpc2VcdTAwMjZyZWc7IG9yIENvbnRpbnVvdXMgRGVsaXZlcnkgZm9yIFB1cHBldCBFbnRlcnByaXNlXHUwMDI2dHJhZGU7IChhcyBhcHBsaWNhYmxlLCB0aGUgXCJTb2Z0d2FyZVwiKSBwZXIgYW4gYXBwbGljYWJsZSBPcmRlciBhbmQgYXJlIHBhcnQgb2YgYW5kIGluY29ycG9yYXRlZCBpbnRvIHRoZSBQdXBwZXQgTWFzdGVyIExpY2Vuc2UgQWdyZWVtZW50IGxvY2F0ZWQgYXQgaHR0cHM6Ly9wdXBwZXQuY29tL2xlZ2FsIG9yIG90aGVyIGV4aXN0aW5nIGxpY2Vuc2UgYWdyZWVtZW50IGdvdmVybmluZyBDdXN0b21lcidzIHVzZSBvZiB0aGUgU29mdHdhcmUgKGFzIGFwcGxpY2FibGUsIHRoZSBcIkFncmVlbWVudFwiKS4gSW4gdGhlIGV2ZW50IG9mIGEgY29uZmxpY3QgYmV0d2VlbiB0aGVzZSBQcm9kdWN0IFRlcm1zIGFuZCB0aGUgQWdyZWVtZW50LCB0aGUgdGVybXMgYW5kIGNvbmRpdGlvbnMgb2YgdGhlc2UgUHJvZHVjdCBUZXJtcyBzaGFsbCBjb250cm9sLCBidXQgb25seSB0byB0aGUgZXh0ZW50IG9mIHN1Y2ggY29uZmxpY3QuIENhcGl0YWxpemVkIHRlcm1zIHVzZWQsIGJ1dCBub3QgZGVmaW5lZCBoZXJlaW4gc2hhbGwgaGF2ZSB0aGUgbWVhbmluZ3Mgc2V0IGZvcnRoIGluIHRoZSBBZ3JlZW1lbnQuIFB1cHBldCBtYXkgdXBkYXRlIHRoZXNlIFByb2R1Y3QgVGVybXMgZnJvbSB0aW1lIHRvIHRpbWUgYnkgcG9zdGluZyBhIHJldmlzZWQgdmVyc2lvbiBhdCBodHRwczovL3B1cHBldC5jb20vbGVnYWwuXG5cblxuMS4gTElDRU5TRS5cblxuXG4gICAxLiBHRU5FUkFMLiBTdWJqZWN0IHRvIEN1c3RvbWVyJ3MgY29tcGxpYW5jZSB3aXRoIHRoZSBBZ3JlZW1lbnQsIFB1cHBldCBncmFudHMgdG8gQ3VzdG9tZXIgYSB3b3JsZHdpZGUsIGxpbWl0ZWQsIG5vbi0gdHJhbnNmZXJhYmxlLCByZXZvY2FibGUgbGljZW5zZSB0byB1c2UgdGhlIFNvZnR3YXJlIGluIGFjY29yZGFuY2Ugd2l0aCB0aGVzZSBQcm9kdWN0IFRlcm1zIGZvciB0aGUgcHVycG9zZSBvZiBtYW5hZ2luZyBDdXN0b21lcidzIGluZm9ybWF0aW9uIHRlY2hub2xvZ3kgaW5mcmFzdHJ1Y3R1cmUgKHdoZXRoZXIgb24gcHJlbWlzZXMgb3IgaW4gdGhlIGNsb3VkLCBhbmQgaW5jbHVkaW5nIGFueSBpbmZvcm1hdGlvbiB0ZWNobm9sb2d5IGluZnJhc3RydWN0dXJlIGZvciB0aGUgYmVuZWZpdCBvZiBDdXN0b21lcidzIGN1c3RvbWVycywgc28gbG9uZyBhcyB0aGUgU29mdHdhcmUgb3BlcmF0ZXMgb24gZXF1aXBtZW50IHRoYXQgaXMgb3duZWQgYnkgQ3VzdG9tZXIpLiBDdXN0b21lciBtYXkgcmVwcm9kdWNlIHRoZSBTb2Z0d2FyZSBhbmQgdXNlIG11bHRpcGxlIGNvcGllcyBjb25jdXJyZW50bHksIHN1YmplY3QgdG8gdGhlIHByaWNpbmcgdGVybXMgaW4gdGhlIEFncmVlbWVudCBhbmQgdGhlc2UgUHJvZHVjdCBUZXJtcy5cblxuXG4gICAyLiBOT0RFUy5cbiAgICAgIDEuIEN1c3RvbWVyIHdpbGwgcGF5IFB1cHBldCBhIGZlZSBmb3IgYSBsaWNlbnNlIHN1YnNjcmlwdGlvbiBhbmQgZm9yIHN1cHBvcnQgYW5kIG1haW50ZW5hbmNlIGJhc2VkIG9uIHRoZSBudW1iZXIgb2YgTm9kZXMgbWFuYWdlZCBieSB0aGUgU29mdHdhcmUuIEEgXCJOb2RlXCIgaXMgYSBzaW5nbGUgbmV0d29yay1jb25uZWN0ZWQgZGV2aWNlIHN1Y2ggYXMgYSBzZXJ2ZXIsIGRlc2t0b3AsIHN0b3JhZ2UgYXBwbGlhbmNlLCBuZXR3b3JrIGRldmljZSAoZS5nLiByb3V0ZXJzIG9yIGEgbG9hZCBiYWxhbmNlcikgb3IgbGFwdG9wICh2aXJ0dWFsIG1hY2hpbmVzIHRoYXQgaGF2ZSBhIHVuaXF1ZSBJUCBhZGRyZXNzIGFyZSBhIHNlcGFyYXRlIE5vZGUgZnJvbSB0aGUgcGh5c2ljYWwgbWFjaGluZSBvbiB3aGljaCB0aGV5IHJlc2lkZSkuXG4gICAgICAyLiBGb3IgUHVwcGV0IEVudGVycHJpc2UsIEN1c3RvbWVyIG1heSBtYW5hZ2UgdXAgdG8gMTAgTm9kZXMgcGVycGV0dWFsbHkgYW5kIGF0IG5vIGNoYXJnZSAodGhlIFwiRnJlZSBMaWNlbnNlXCIpLiBJZiBQdXBwZXQgcHJvdmlkZXMgdG8gQ3VzdG9tZXIgYW55IGV2YWx1YXRpb24sIHRyaWFsIG9yIG90aGVyIHByb21vdGlvbmFsIG9mZmVyaW5nIG9mIENvbnRpbnVvdXMgRGVsaXZlcnkgZm9yIFB1cHBldCBFbnRlcnByaXNlIGZvciBhIGxpbWl0ZWQgcGVyaW9kIChcIkZyZWUgVHJpYWxcIiksIEN1c3RvbWVyIG1heSB1c2UgdGhlIFNvZnR3YXJlIHVudGlsIHRoZSBlbmQgb2YgdGhlIEZyZWUgVHJpYWwgcGVyaW9kLlxuICAgICAgMy4gQ3VzdG9tZXIgbWF5IG1hbmFnZSBtb3JlIHRoYW4gMTAgTm9kZXMgZm9yIGEgc3BlY2lmaWMgdGVybSBpbiBleGNoYW5nZSBmb3IgYSBmZWUgIChhIFwiUGFpZCBMaWNlbnNlXCIpLiBXaXRoIGEgUGFpZCBMaWNlbnNlLCBDdXN0b21lciBpcyBhbGxvd2VkIHRvIGJ1cnN0IHVwIHRvIGRvdWJsZSB0aGUgYWdncmVnYXRlIE5vZGUgY291bnQgZm9yIGZvdXIgKDQpIGRheXMgaW4gZWFjaCBjYWxlbmRhciBtb250aCwgd2hpY2ggY2FuIGJlIHVuaXF1ZSBvciBjb25zZWN1dGl2ZSBkYXlzLiBJZiBDdXN0b21lciBidXJzdHMgbW9yZSB0aGFuIGZvdXIgZGF5cyBpbiBhIGNhbGVuZGFyIG1vbnRoLCB0aGUgQ3VzdG9tZXIgd2lsbCBiZSBkZWVtZWQgdG8gaGF2ZSBleGNlZWRlZCB0aGUgTm9kZSBjb3VudCBmb3IgdGhlIGFwcGxpY2FibGUgbGljZW5zZSB0ZXJtLiBUaGUgZmVlLCBudW1iZXIgb2YgTm9kZXMgbGljZW5zZWQsIGFuZCBzdWJzY3JpcHRpb24gdGVybSB3aWxsIGJlIHN0YXRlZCBpbiBDdXN0b21lcidzIE9yZGVyIGFuZCBpbiBhIGxpY2Vuc2UgZmlsZSB0aGF0IGFjY29tcGFuaWVzIHRoZSBTb2Z0d2FyZS4gIEN1c3RvbWVyIGFncmVlcyB0byBwYXkgUHVwcGV0IGFsbCBmZWVzIGluIGFjY29yZGFuY2Ugd2l0aCB0aGUgcGF5bWVudCB0ZXJtcyBzZXQgZm9ydGggaW4gdGhpcyBBZ3JlZW1lbnQuICBcblxuXG4yLiBPUEVOIFNPVVJDRSBDT0RFLiBQb3J0aW9ucyBvZiB0aGUgU29mdHdhcmUgYXJlIHN1YmplY3QgdG8gdGhlIHByb3Zpc2lvbnMgb2YgYW4gXCJvcGVuIHNvdXJjZVwiIGxpY2Vuc2UgKHRoZSBcIk9wZW4gU291cmNlIENvbXBvbmVudHNcIikuIFRoZSBhcHBsaWNhYmxlIGxpY2Vuc2UgYW5kIGl0cyBhc3NvY2lhdGVkIGNvbXBvbmVudHMgYXJlIGxpc3RlZCBhdCBodHRwczovL3B1cHBldC5jb20vcHVwcGV0LWVudGVycHJpc2UtY29tcG9uZW50cy0gbGljZW5zZXMvLlxuXG5cbjMuIFRISVJEIFBBUlRZIFNPRlRXQVJFLiBUaGUgU29mdHdhcmUgaW5jbHVkZXMgY29tcG9uZW50cyB1bmRlciBsaWNlbnNlIGZyb20gdGhpcmQgcGFydGllcyAodGhlIFwiVGhpcmQgUGFydHkgU29mdHdhcmVcIikuIFRoZSBjb21wb25lbnRzIGFuZCB0aGVpciBhcHBsaWNhYmxlIHRoaXJkLXBhcnR5IGxpY2Vuc2UgdGVybXMgZm9yIFB1cHBldCBFbnRlcnByaXNlIGFyZSBsaXN0ZWQgYXRcbmh0dHBzOi8vcHVwcGV0LmNvbS9wdXBwZXQtZW50ZXJwcmlzZS1jb21wb25lbnRzLWxpY2Vuc2VzLy4gQ3VzdG9tZXIgbWF5IG5vdCBkaXN0cmlidXRlIGFueSBwcm9kdWN0IG9yIHNlcnZpY2UgdXNpbmcgdGhlIFB1cHBldCBNYXJrcywgaW5jbHVkaW5nIGluIGNvbm5lY3Rpb24gd2l0aCBhbnkgT3BlbiBTb3VyY2UgQ29tcG9uZW50cyBvciBUaGlyZCBQYXJ0eSBTb2Z0d2FyZS5cblxuXG40LiBJTlNQRUNUSU9OLiBUaGUgUHVwcGV0IEVudGVycHJpc2UgQ29uc29sZSBpbmNsdWRlZCBpbiB0aGUgU29mdHdhcmUgKHRoZSBcIkNvbnNvbGVcIikgd2lsbCBkaXNwbGF5IHRoZSBzdGF0dXMgb2YgQ3VzdG9tZXIncyBwdXJjaGFzZWQgcHJvZHVjdCBsaWNlbnNlIGNvbnN1bXB0aW9uIGFuZCBjb21wbGlhbmNlLCBhbG9uZyB3aXRoIGEgXCJDb250YWN0IFB1cHBldCBTYWxlc1wiIG5vdGlmaWNhdGlvbiBhbmQgbGluayAoYSB0b29sIHRvIGZhY2lsaXRhdGUgY29tbXVuaWNhdGlvbiBub3QgYSBtZWNoYW5pc20gZm9yIHB1cmNoYXNpbmcgYWRkaXRpb25hbCBsaWNlbnNlcykgd2hlbiB0aGUgbGljZW5zZWQgbGltaXQgaGFzIGJlZW4gcmVhY2hlZC4gQ3VzdG9tZXIgY2FuIG1hbnVhbGx5IGFkZCBvciByZW1vdmUgTm9kZXMgcGVyIHRoZSBpbnN0cnVjdGlvbnMgaW4gdGhlIFNvZnR3YXJlIGRvY3VtZW50YXRpb24uIFRoZSBsaWNlbnNlIGNvdW50IHNob3duIG9uIHRoZSBDb25zb2xlIGlzIGNhbGN1bGF0ZWQgYmFzZWQgb24gdGhlIG51bWJlciBvZiBOb2RlcyB0aGF0IGhhdmUgcmVwb3J0ZWQgdG8gdGhlIFB1cHBldCBDb25zb2xlIGluIHByb2R1Y3Rpb24gYW5kIG5vbi1wcm9kdWN0aW9uIGVudmlyb25tZW50cyAoXCJQcm9kdWN0aXZlIFVzZVwiKS4gQ3VzdG9tZXIgbWF5IG1ha2UgdW5saW1pdGVkIGNvcGllcyBvZiB0aGUgU29mdHdhcmUsIGJ1dCBtdXN0IHBheSBmb3IgYWxsIE5vZGVzIGluIFByb2R1Y3RpdmUgVXNlIGluIGFjY29yZGFuY2Ugd2l0aCB0aGUgdGVybXMgb2YgdGhlIEFncmVlbWVudC4gVXBvbiBQdXBwZXQncyByZXF1ZXN0LCBDdXN0b21lciBzaGFsbCwgd2l0aGluIHRocmVlICgzKSBidXNpbmVzcyBkYXlzIG9mIHN1Y2ggcmVxdWVzdCwgcHJvdmlkZSBQdXBwZXQgd2l0aCBhIGNlcnRpZmljYXRpb24gc2lnbmVkIGJ5IEN1c3RvbWVyJ3MgYXV0aG9yaXplZCByZXByZXNlbnRhdGl2ZSB2ZXJpZnlpbmcgdGhlIG51bWJlciBvZiBOb2RlcyBiZWluZyB1c2VkIGJ5IEN1c3RvbWVyIGluIFByb2R1Y3RpdmUgVXNlLiBJZiBQdXBwZXQgaGFzIGEgZ29vZCBmYWl0aCByZWFzb24gdG8gYmVsaWV2ZSB0aGF0IEN1c3RvbWVyIGhhcyBpbmNvcnJlY3RseSByZXBvcnRlZCB0aGUgbnVtYmVyIG9mIE5vZGVzIGluIFByb2R1Y3RpdmUgVXNlIHVzaW5nIHRoZSBDb25zb2xlLCBQdXBwZXQgaGFzIHRoZSByaWdodCB0byBoYXZlIGl0cyBwZXJzb25uZWwgaW5zcGVjdCBvbmNlIHBlciB5ZWFyIHRoZSBudW1iZXIgb2YgTm9kZXMgYmVpbmcgbWFuYWdlZCBieSB0aGUgU29mdHdhcmUsIGZvbGxvd2luZyB0aGlzIHByb3RvY29sOiAoMSkgaWRlbnRpZnkgYWxsIHVuaXF1ZSBQdXBwZXQgRW50ZXJwcmlzZSBDb25zb2xlIGluc3RhbGxhdGlvbnM7ICgyKSBtb25pdG9yIEN1c3RvbWVyJ3MgcGVyc29ubmVsJ3MgbG9naW4gdG8gZWFjaCBQdXBwZXQgRW50ZXJwcmlzZSBDb25zb2xlIGluc3RhbGxhdGlvbjsgYW5kICgzKSByZWNvcmQgdGhlIGFjdGl2ZSBOb2RlcyByZXBvcnRlZCBieSB0aGUgQ29uc29sZS4gQW55IHN1Y2ggaW5zcGVjdGlvbiB3aWxsIHRha2UgcGxhY2Ugb25seSBkdXJpbmcgbm9ybWFsIGJ1c2luZXNzIGhvdXJzIGFuZCB1cG9uIG5vdCBsZXNzIHRoYW4gdGVuICgxMCkgYnVzaW5lc3MgZGF5cycgd3JpdHRlbiBub3RpY2UuXG5cblxuNS4gVVNBR0UgREFUQS4gVW5sZXNzIEN1c3RvbWVyIGNob29zZXMgdG8gZGlzYWJsZSBhbmQgb3B0LW91dCBvZiB0aGlzIGZ1bmN0aW9uYWxpdHksIFB1cHBldCBtYXkgY29sbGVjdCBhbmQgdXNlIGluZm9ybWF0aW9uIGF1dG9tYXRpY2FsbHkgZ2VuZXJhdGVkIGJ5IHRoZSBTb2Z0d2FyZSByZWdhcmRpbmcgQ3VzdG9tZXIncyB1c2Ugb2YgdGhlIFNvZnR3YXJlLCB3aGljaCBpbmNsdWRlcyB0aGUgYnJvd3NlciBhbmQgb3BlcmF0aW5nIHN5c3RlbXMgdHlwZXMgYW5kIHZlcnNpb25zIHVzZWQsIGluc3RhbGxlciBjb21tYW5kcywgd2ViIGludGVyZmFjZSBjbGlja3MsIG1vdXNlIGdlc3R1cmVzLCBkYXRhIHJlbGF0aW5nIHRvIHRoZSBzdWJtaXNzaW9uIG9mIG9ubGluZSBmb3JtcyAoYnV0IG5vdCB0aGUgY29udGVudCBvZiB0aGUgZm9ybXMpLCBJUCBhZGRyZXNzZXMsIGFuZCBwYWdlIHZpZXdzLCBVUkxzIHZpc2l0ZWQgd2l0aGluIHRoZSBTb2Z0d2FyZSwgZXJyb3IgbWVzc2FnZXMgYW5kIHJlbGF0ZWQgZGF0YSBhYm91dCBTb2Z0d2FyZSBlcnJvcnMgd2hlcmUgU29mdHdhcmUgaXMgaG9zdGVkIGJ5IFB1cHBldCBvciBpdHMgcHJvdmlkZXIocykgb3IgQ3VzdG9tZXIgb3IgaXRzIHByb3ZpZGVyKHMpIChcIlVzYWdlIERhdGFcIikgYW5kIEN1c3RvbWVyIGNvbnNlbnRzIHRvIHN1Y2ggY29sbGVjdGlvbiBhbmQgdXNlIHBlciB0aGlzIHNlY3Rpb24uIFB1cHBldCBtYXkgdXNlIGFuZCBzaGFyZSB0aGUgVXNhZ2UgRGF0YSB3aXRoIHRoaXJkIHBhcnRpZXMgdG8gaGVscCBQdXBwZXQgaW1wcm92ZSB0aGUgdXNlciBleHBlcmllbmNlIGFuZCB0aGUgU29mdHdhcmUuIFRoZSBVc2FnZSBEYXRhIGNvbGxlY3RlZCBhbmQgdXNlZCBieSBQdXBwZXQgaXMgZGUtaWRlbnRpZmllZCBzbyB0aGF0IGl0IGRvZXMgbm90IHJldmVhbCB0aGUgbmFtZSwgcm9sZSwgY29udGFjdCBkZXRhaWxzIG9yIG90aGVyIHJlYWwgd29ybGQgaWRlbnRpZmllcnMgb2YgQ3VzdG9tZXIncyB1c2Vycy4gSW4gYWxsIGNhc2VzIHRoZSBVc2FnZSBEYXRhIGNvbGxlY3RlZCBzaGFsbCBiZSBQdXBwZXQncyBzb2xlIHByb3BlcnR5IGFuZCBjb25maWRlbnRpYWwgaW5mb3JtYXRpb24uXG5cblxuNi4gQ09OVElOVU9VUyBERUxJVkVSWSBGT1IgUFVQUEVUIEVOVEVSUFJJU0UuXG5cblxuICAgMS4gQ29udGludW91cyBEZWxpdmVyeSBmb3IgUHVwcGV0IEVudGVycHJpc2UgaXMgYSBzZXBhcmF0ZSBwcm9kdWN0IHdoaWNoIGluY2x1ZGVzIGJvdGggUHVwcGV0IEVudGVycHJpc2UgYW5kIGFkZGl0aW9uYWwgc29mdHdhcmUgZm9yIHRoZSBjb250aW51b3VzIGRlbGl2ZXJ5IGZ1bmN0aW9uYWxpdHkuIENvbnRpbnVvdXMgRGVsaXZlcnkgZm9yIFB1cHBldCBFbnRlcnByaXNlIGluY2x1ZGVzIGFkZGl0aW9uYWwgT3BlbiBTb3VyY2UgQ29tcG9uZW50cyBsaXN0ZWQgYXQgIGh0dHBzOi8vcHVwcGV0LmNvbS9jb21wb25lbnQtIGxpY2Vuc2UtY2Q0cGUgYW5kIFRoaXJkIFBhcnR5IFNvZnR3YXJlIGxpc3RlZCBhdCBodHRwczovL3B1cHBldC5jb20vY29tcG9uZW50LSBsaWNlbnNlLWNkNHBlLlxuXG5cbiAgIDIuIEZPUiBFWElTVElORyBQVVBQRVQgRU5URVJQUklTRSBDVVNUT01FUlMgV0hPIEVJVEhFUiBDT05WRVJUIEVYSVNUSU5HIFBVUFBFVCBFTlRFUlBSSVNFIExJQ0VOU0VTIFRPIENPTlRJTlVPVVMgREVMSVZFUlkgRk9SIFBVUFBFVCBFTlRFUlBSSVNFIExJQ0VOU0VTIE9SIFBVUkNIQVNFIFNFUEFSQVRFIExJQ0VOU0VTIFRPIENPTlRJTlVPVVMgREVMSVZFUlkgRk9SIFBVUFBFVCBFTlRFUlBSSVNFLCBTVUNIIENPTlZFUlNJT04gT1IgUFVSQ0hBU0UgU0hBTEwgTk9UIEVYVEVORCBBTlkgUEVSRk9STUFOQ0UgV0FSUkFOVFkgSU4gVEhFIEFHUkVFTUVOVCBBUFBMSUNBQkxFIFRPIFBVUFBFVCBFTlRFUlBSSVNFLCBBTkQgQU5ZIFBST0RVQ1QgV0FSUkFOVFkgSU4gVEhFIEFHUkVFTUVOVCBTSEFMTCBBUFBMWSBPTkxZIFRPIFRIRSBDT05USU5VT1VTIERFTElWRVJZIEZVTkNUSU9OQUxJVFkgT0YgVEhFIFNPRlRXQVJFLlxuXG5cbjcuIFNVUlZJVkFMLiBUaGUgZm9sbG93aW5nIFNlY3Rpb25zIG9mIHRoZXNlIFByb2R1Y3QgVGVybXMgc3Vydml2ZSB0ZXJtaW5hdGlvbiBvZiB0aGUgQWdyZWVtZW50OiAyIHRocm91Z2ggNy4iLCJ2YWx1ZVR5cGUiOiJUZXh0IiwiaXNIaWRkZW4iOnRydWV9LCJleHBpcmVzX2F0Ijp7InRpdGxlIjoiRXhwaXJhdGlvbiIsImRlc2NyaXB0aW9uIjoiTGljZW5zZSBFeHBpcmF0aW9uIiwidmFsdWUiOiIyMDIxLTEwLTIyVDAwOjAwOjAwWiIsInZhbHVlVHlwZSI6IlN0cmluZyJ9LCJzZmRjX2xpY2Vuc2Vfbm8iOnsidGl0bGUiOiJTRkRDIExpY2Vuc2UgTm8uIiwidmFsdWUiOiIiLCJ2YWx1ZVR5cGUiOiJTdHJpbmciLCJpc0hpZGRlbiI6dHJ1ZX0sInN0YXJ0X2RhdGUiOnsidGl0bGUiOiJTdGFydCBEYXRlIiwidmFsdWUiOiIyMDIxLTA5LTIyIiwidmFsdWVUeXBlIjoiU3RyaW5nIiwiaXNIaWRkZW4iOnRydWV9fSwiaXNBaXJnYXBTdXBwb3J0ZWQiOnRydWUsImlzR2l0T3BzU3VwcG9ydGVkIjp0cnVlLCJpc1NuYXBzaG90U3VwcG9ydGVkIjp0cnVlfX0=","innerSignature":"eyJsaWNlbnNlU2lnbmF0dXJlIjoiUDRqRjBiclBRL3gvYTdleUg0UXJOSUNRTVFGUm9GZFYrZng0SG1qU0NxYVMrOC9uVnAxa1lhblBjemxDcEgrWXNvbDE3VStDN1lHRmlKRHd1YnpVTW5rMmswYStIN3Zvb3JGVFFad1RObFc0Qmx0cmRtRWliRGJibjdiOUFiYWdkOG5xMi8xQlBYcHlrYWRjVjJvM3VMMURGb3dSdTZoYWxJKzFsbndaeldHeDMxS2RVMHRXUFlSOGIvTnNBMnRGSE1COUE0T2hZbENhMW16eFVRajBYSXc2QzN6d0V3a3RrNmF6czdReWd1cDRSaHdKUHJ3WHk1Z01CclF1RWxkdWxPVEhTYUhwK0hwVFQzcHZQNmFYOG9QTDlBQnR3Q0VHZkhXeDIzVWVPKzBGclpNQzNFOUVuR0hRUXJaTGtpd1BQUU04MGJmOGdkbnZZcEFiQWpMbnlBPT0iLCJwdWJsaWNLZXkiOiItLS0tLUJFR0lOIFBVQkxJQyBLRVktLS0tLVxuTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF3ZzJUck1UditPTElWYSt6MkFURVxuTXBvdHlpOTFUWm4zOXo5VC9kVTFraDVXb01YRnlyNGN2QmFDRjN1cDZLMVkwYjNKRjBPZmk3VmI2UXNDdVVkQVxuYkFtOEJZOWV5S1J0Tk9JSXNMSUpPdjg0a3R5TVRMcjN5QjlIVzc4VkwwL2h4N3diZXFBRStXUmNjSWxpRjRvalxuZk9JWVZoWmF5WmE3bk5tY1psTTFKblhMclBwZ2ZleWFRb1p1NUdjSHFPODZvUkxlZjVXdVB4OGZuam1IWVFnUlxuSmFGNDF0RXY1SkJsYW9aSUFhMWlZRWNDeHRIYjRDbjg2ZEVNY1BKYnB5MU5FTTl3ZmN1dWhDeFFLM1pRdTFBeVxuaitVL0U3ZXBleTRPZyt0dTh0bzJ0MllxclpDR0NHUThjTDNFSnRTaGZZdjQxQVU5ZFJFK0FaYkNLZDlPNTRvblxuTlFJREFRQUJcbi0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLVxuIiwia2V5U2lnbmF0dXJlIjoiZXlKemFXZHVZWFIxY21VaU9pSmpMeTlqVW5NeVJtd3hVMWRCT0ZwaVFsb3lZa1JqY1VjMFduVk9RV1l5YnpSc1dGSlVTRVppU0U1eFMwMXhObWhaTlVGS2JsYzBSVFpwZG5VeVEzTmtUV012YTNWRU1EVk1RalV4ZW14dWIwYzFTWEY1TjJSRmNVUlBXbXRQYzBjME9UY3hlVEpHTm0wMmFtZHlLMjEzUjFSV1dYQkpkVlpLVEZwMFVreEhaRXRrSzJkRVpqVkpTVkUxYW5sellsTjJSWGhoYnpCb1pYbENaV1UzZDBnMFpIQjNhMUJaVVRKUVdqQkljRzlQYnpKbE4wWm5WRk5TWjNOaWNFUTNha2g1YlM5V04wUlBha0Z5VmtwdFQwbDBPV1ZSZUVwQ00wdEdUMmMwZVVOQmJYZ3hTSG95Ymt0V1MyTnlkR3N2U0VRdlExTXllbUZCVjFGUldFWk9OMUZHYVVKaFowSklVa1paYVU1TVpHVnNha2haZW5KYVlqVXhNRXRTVEdjcldVMTVTRzlNVTFsM2RYbFFZbE5ZVjNCeWFXVldheTlrV25GcGRESnNSMVJMWVZwelIybFNUVTl0UW5BMFUxWXhjUzlRVEhnekwzYzlQU0lzSW1kc2IySmhiRXRsZVVsa0lqb2lZbVJsWlRVMk5UWXdZMlppTkROak9XSXlPR0ptT1RobFlXTmhabUUyTkRZaWZRPT0ifQ=="}
+    }
+  pfi-config.json: |
+    {
+      "dbEndpoint": "postgres://postgres:5432/cd4pe",
+      "dbUser": "cd4pe",
+      "dbPass": "qXnxSLWkJcj3iswHXFIlxn6T",
+      "dbMaxPoolSize": "2",
+      "dumpURI": "dump://localhost:7000",
+      "backendPort": 8000,
+      "secretKey": "TRK2T6O76V3yaOaZ3+5Vzg=="
+    }
+---
+apiVersion: v1
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURGakNDQWY2Z0F3SUJBZ0lSQU9yU2ppaitlTU9lREhYcys3blFMM0F3RFFZSktvWklodmNOQVFFTEJRQXcKRlRFVE1CRUdBMVVFQXhNS2FXNW5jbVZ6Y3kxallUQWVGdzB5TVRFd01UUXhPREV5TXpWYUZ3MHlNakV3TVRReApPREV5TXpWYU1CVXhFekFSQmdOVkJBTVRDbWx1WjNKbGMzTXRZMkV3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBCkE0SUJEd0F3Z2dFS0FvSUJBUURsZTBZVUpBeTlrend0T1NaTE83Nzl3TmREcFY0ZGFLeUFOQXRJdDZla0Y0MnIKazZWaENEa3psWVhMSVhYTlNsY1BYb0dKWkN1ZzBsaWhacEVIZ1IzanFodUVsUWttZ0JkTTFQSUF3bmxRTWhvZwo1Wi9qZm5IUURPOVlmVkx4eVJMcCtRaGhqdjZSTTZGcHdXUGxWS3RHUkpnUEJKRzNMVHp5OGhLcllCMHhVV2Z3Cm9wNUVQc1laei9zSDV1SkUxVXE0SHdBbkE1aERhMXVkTkVrZ0pMczg2MUJxNTJzLytPSE5xWENrNER4L2JTdFIKMExwQkNUa2pTaWFvUVpQYmVuUDRzb0RCbXg2M1hxcUo4UkxMQ3dBTUlsbTd1SnR3YlIzZGFycG5yUmxuTXd3ZAp6MW0ycENaNGtKdW9jYjhTK0FlcGlDMUdSZk9xMUZYbUV6M01EcG9WQWdNQkFBR2pZVEJmTUE0R0ExVWREd0VCCi93UUVBd0lDcERBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEd1lEVlIwVEFRSC8KQkFVd0F3RUIvekFkQmdOVkhRNEVGZ1FVQzgycGEwNGJ3TlNFUVdrQXlpcjFBeUpWRnRZd0RRWUpLb1pJaHZjTgpBUUVMQlFBRGdnRUJBTElZUjJ1MkRkOGkweUpmY2d4UC9vTVh2V0Q5a2gxTDdHWGJ1VjJSM09XRDQzN3RZSzBZCks1Q296NjFrMDNkTm9QWWhLUUFvbGphSlN4S0ljYUlxUFdpeEN5aUs0WXpYem5tSmw3M2hxMGlzd2xVK1h2eE8KN2dHRGkrZWttZjR5YzdVaXpKcXRDUGZHOENmMHMzTkUxVTdkNzBvNEZRVXNZb3hGb1FaNHhvTFhwUjdUZ2xJTgpMdlFmTXF0WHc4RUcyV2hPclc2SlRBaThsSlZOU3gyazRwMDk5Y3E1bzl6RGFXVFAyZHpuNXQzOVNHa2tRM1RCCllZVUtwVEZaNzExbGtlTWhPOTA0SGdDUGorUnU2dDE4YThmaTBOdVhIQWxXNkJkc3Z2SzZwT1h1R05QK2VwRkkKTWtnWGNQeXVaRHN0TnFsSTJibkRpbFN6b1MxeXREMHV1VUE9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+  tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBNVh0R0ZDUU12Wk04TFRrbVN6dSsvY0RYUTZWZUhXaXNnRFFMU0xlbnBCZU5xNU9sCllRZzVNNVdGeXlGMXpVcFhEMTZCaVdRcm9OSllvV2FSQjRFZDQ2b2JoSlVKSm9BWFROVHlBTUo1VURJYUlPV2YKNDM1eDBBenZXSDFTOGNrUzZma0lZWTcra1RPaGFjRmo1VlNyUmtTWUR3U1J0eTA4OHZJU3EyQWRNVkZuOEtLZQpSRDdHR2MvN0IrYmlSTlZLdUI4QUp3T1lRMnRiblRSSklDUzdQT3RRYXVkclAvamh6YWx3cE9BOGYyMHJVZEM2ClFRazVJMG9tcUVHVDIzcHorTEtBd1pzZXQxNnFpZkVTeXdzQURDSlp1N2liY0cwZDNXcTZaNjBaWnpNTUhjOVoKdHFRbWVKQ2JxSEcvRXZnSHFZZ3RSa1h6cXRSVjVoTTl6QTZhRlFJREFRQUJBb0lCQUI2N3NMbjN6Z0VCbS9pTwpnOU5sa0FHWjl2cG5Sa0I0Q1VvdUxpaXg5L0NnK3VjMG9keHA1b2REQ2lVWE9SaWlVU0NNenBwZzRQcnIwTlRrCjBKMkpyRUFXUXhNeGhvVXllR3hneEh4WGp6bXZUQktGempFQWVTdWMzOTBoQTUvQUJ4bHdzYStuSCs3QVZHaSsKYnF1QytHRXp4STJXVmhHTExITjQrZ2tibVMxR2NkSVI0VzFWKzVtNjd5TVNXMk9aR3Yya0RjUHhQVUpxbFZRSgp0U1Y5aGsrMWNXUC9BcGM1cEZJUE5RY3paTWpvVEZTbE5zeUFUSkNpbnE0T1FaNXdMazM5bmppTDZISFBQRWQ3CkRpVTYwYUI2anN0THVPRW9qSHNLQUg5V2ZVZ2VPRWkrMVhkV2pVSkZ3QkVnczN6UkJ1ZnllbTVkZU5vb285Z0sKOHQ3UmtRRUNnWUVBODFDUkJLeWNGMWkvZ2VqQitFRnZIRHBleDNjdnJJeW94MFNiNjJVKzBLK3UxU002WEZ0eApqeXpkNUZocC9SUVNXVXNsY1dwcXV2SXJEQjVYKzJrM0p2UUdiMklGS2VPbkVKWnZDL1hyY2ZQM0dvY1NSc3BHCmpjWXFGQyt6Q1pMWk42Mk9YVkxLNCtsekZMQ2RJZnFEREl1aTkxTFR5UG1iakQySEFkTC9VVUVDZ1lFQThYSVUKdE5QLzM1NFR6Vk8zMkVCMThhQjFYZUFEQlJINFpub3FYeGhiOWgvTzdVZ1NtZDRFZmdJanZ6WnRyRXFnZHZCUApxRmNDa0QrTnlLV1lEYngveFpjWDYvbnZQTHQxbjJucXNIWFYweC9Wb2lVV3JXaDZreUxnUzJsVDkwKzJtVW5kCno3cnBmUnBGZ1dhVnZaS1lERVNQVFc5aFJjeWY1THdZaDk5aFA5VUNnWUVBNjZ5Uyt0c1NTZzdkV0VDU2VSc3cKTzBCU2c1UHZhb3ZJQTFOeVR4eC9MbldzdTZmbXBJU3lSd01uWGtGQlVEQTc0Wi9IQWNjWTRFRW03eE1KRjJ6LwpUY3k1MnZNdm16WjFvTHlGalNsRFI5b044L1QyLy9oM1JHVzRabHNaYU9HRFlzbktCcHptQnNJZGhPSFpJWXRiCm1qQTZ4cUxFbm5zZmJrUStXOGI3Sk1FQ2dZRUE3UjdYM1J1VFlKOFQzWVFKdXRUYndGaVF5NGdVRHlldDU1NjAKL0QybEd4djBFaTdGTGQzUVZaeHVWUHowU3MvanRjdWV2N25zSjVSeS80bzV3Y3ZOUkZWMlJlZHBJQ0VPakdmdAorQzFSdVEyN3RvbHNNeE8zeGNicnRzUVRsWC93MmF5a3JiMW9UOWU4U1RCaGdSTjJSaDRUQ3I2SExwQ2V1M3BMCk1TMmRpWjBDZ1lBVXFkUElreGJsaUZES1M4UXE4cy96MGFTdnZWcm5LT0RyUnM5Z2J0a21JMmNXWCtEVjlVUysKV0ZpUFYzS2RTNHNkanJYU0gvM3lUV2RDNnFIUjVLMDRkQnoyOUlTU0xud1Z4UGNpUGQyQ0srNXpPeHRTdnFkQQpnVGY1b0VRbVB6SjRCekVKZmpzblJtVEUvYWVmcGxkZEN0SFQ2OXB1VzlZVGxwcnRuNFVDNlE9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+kind: Secret
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+    kots.io/exclude: "false"
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-issuer
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-pfi
+stringData:
+  pfiSecretKey: TRK2T6O76V3yaOaZ3+5Vzg==
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-postgres
+stringData:
+  POSTGRES_DB: cd4pe
+  POSTGRES_PASSWORD: qXnxSLWkJcj3iswHXFIlxn6T
+  POSTGRES_USER: cd4pe
+  password: qXnxSLWkJcj3iswHXFIlxn6T
+  user: cd4pe
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-root
+stringData:
+  email: root
+  password: $2a$10$vJ2dBLyew/4B4dqiQmWEM..HKEwNw.vI764RXPPQrnUdQXh5IW5TS
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+    kots.io/exclude: "false"
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: object-store
+stringData:
+  accessKey: minio
+  endpoint: http://minio:9000
+  secretKey: gN4ESMV9Z5FGHXhTno02wsLW
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query-postgres
+stringData:
+  POSTGRES_DB: query
+  POSTGRES_PASSWORD: nMD5NSsjGRBzRaapLl7CvRMi
+  POSTGRES_USER: query
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: cd4pe
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe
+spec:
+  ports:
+  - name: cd4pe-web
+    port: 8080
+    targetPort: cd4pe-web
+  - name: cd4pe-backend
+    port: 8000
+    targetPort: cd4pe-backend
+  selector:
+    app.kubernetes.io/name: cd4pe
+    app.kubernetes.io/part-of: cd4pe
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+    kots.io/exclude: "false"
+  labels:
+    app.kubernetes.io/name: cd4pe
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-backend
+spec:
+  ports:
+  - name: cd4pe-backend
+    nodePort: 8000
+    port: 8000
+    targetPort: cd4pe-backend
+  selector:
+    app.kubernetes.io/name: cd4pe
+    app.kubernetes.io/part-of: cd4pe
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: minio
+spec:
+  ports:
+  - port: 9000
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/part-of: cd4pe
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: minio-internal
+spec:
+  clusterIP: None
+  ports:
+  - name: minio
+    port: 9000
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/part-of: cd4pe
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: cd4pe-postgres
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: postgres
+spec:
+  clusterIP: None
+  ports:
+  - port: 5432
+  selector:
+    app.kubernetes.io/name: cd4pe-postgres
+    app.kubernetes.io/part-of: cd4pe
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: query
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query
+spec:
+  ports:
+  - name: query
+    port: 8080
+    targetPort: query
+  selector:
+    app.kubernetes.io/name: query
+    app.kubernetes.io/part-of: cd4pe
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: query-postgres
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query-postgres
+spec:
+  clusterIP: None
+  ports:
+  - port: 5432
+  selector:
+    app.kubernetes.io/name: query-postgres
+    app.kubernetes.io/part-of: cd4pe
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: ui
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: ui
+spec:
+  ports:
+  - name: ui
+    port: 3000
+    targetPort: ui
+  selector:
+    app.kubernetes.io/name: ui
+    app.kubernetes.io/part-of: cd4pe
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: cd4pe
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cd4pe
+  template:
+    metadata:
+      annotations:
+        checksum/changes: 89f9375536f9f0f4df2f930d21699e2f8413bd2b61f1634de0400d3af10f6667
+        kots.io/app-slug: cd4pe
+      labels:
+        app.kubernetes.io/name: cd4pe
+        app.kubernetes.io/part-of: cd4pe
+        kots.io/app-slug: cd4pe
+        kots.io/backup: velero
+    spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: minio
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: cd4pe
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      containers:
+      - env:
+        - name: ANALYTICS
+          value: "false"
+        - name: CD4PE_ROOT_EMAIL
+          valueFrom:
+            secretKeyRef:
+              key: email
+              name: cd4pe-root
+        - name: CD4PE_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: cd4pe-root
+        - name: CD4PE_SECURE_COOKIE
+          value: "true"
+        - name: CD4PE_ROUTE_PREFIX
+          value: /cd4pe
+        - name: PUPPET_TEAMS_WEB_UI_ENDPOINT
+          value: https://cdpev4.westus2.cloudapp.azure.com
+        - name: CD4PE_WEB_UI_ENDPOINT
+          value: https://cdpev4.westus2.cloudapp.azure.com
+        - name: CD4PE_BACKEND_SERVICE_ENDPOINT
+          value: http://cdpev4.westus2.cloudapp.azure.com:8000
+        - name: CD4PE_QUERY_SERVICE_PORT
+          value: ""
+        - name: CD4PE_AGENT_SERVICE_ENDPOINT
+          value: dump://localhost:7000
+        - name: CD4PE_STORAGE_PROVIDER
+          value: S3
+        - name: CD4PE_S3_USE_PATH_STYLE
+          value: "true"
+        - name: CD4PE_STORAGE_BUCKET
+          value: cd4pe
+        - name: CD4PE_STORAGE_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: endpoint
+              name: object-store
+        - name: CD4PE_S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: accessKey
+              name: object-store
+        - name: CD4PE_S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: secretKey
+              name: object-store
+        - name: CD4PE_TRUSTED_CERT
+          valueFrom:
+            secretKeyRef:
+              key: tls.crt
+              name: cd4pe-issuer
+              optional: true
+        - name: CD4PE_LOCAL_IMAGE_PULL_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: config
+              name: cd4pe-registry-creds
+              optional: true
+        - name: CD4PE_PUPPET_DEV_TOOLS_REF
+          value: puppet/puppet-dev-tools:4.x
+        - name: CD4PE_EULA_ACCEPTED
+          value: "true"
+        - name: CD4PE_ON_KUBERNETES
+          value: "true"
+        - name: JVM_ARGS
+          value: -Duser.timezone=UTC -Xmx1024M -Xms512M
+        - name: LOG4J_PATH
+          value: /etc/cd4pe/log4j.properties
+        - name: OTEL_TRACES_EXPORTER
+          value: logging
+        - name: OTEL_METRICS_EXPORTER
+          value: none
+        - name: OTEL_TRACES_SAMPLER
+          value: always_off
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: service.name=cd4pe,service.version=$(CD4PE_VERSION)
+        image: proxy.replicated.com/proxy/cd4pe/gcr.io/platform-services-297419/cd4pe/continuous-delivery-for-puppet-enterprise:4.9.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /cd4pe
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        name: cd4pe
+        ports:
+        - containerPort: 8080
+          name: cd4pe-web
+        - containerPort: 8000
+          name: cd4pe-backend
+        readinessProbe:
+          httpGet:
+            path: /cd4pe/status
+            port: 8080
+        resources:
+          limits:
+            cpu: "4"
+            memory: 3072Mi
+          requests:
+            cpu: 250m
+            memory: 1024Mi
+        securityContext:
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /disk
+          name: cache-volume
+        - mountPath: /etc/cd4pe
+          name: cd4pe-config
+        - mountPath: /tmp
+          name: tmp
+      hostname: cd4pe
+      imagePullSecrets:
+      - name: cd4pe-registry
+      securityContext:
+        fsGroup: 10001
+        runAsGroup: 10001
+        runAsUser: 10001
+      serviceAccountName: cd4pe
+      volumes:
+      - emptyDir: {}
+        name: cache-volume
+      - name: cd4pe-config
+        projected:
+          sources:
+          - secret:
+              name: cd4pe-config
+          - configMap:
+              name: cd4pe-log4j
+      - emptyDir: {}
+        name: tmp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+    kube-score/ignore: pod-probes
+  labels:
+    app.kubernetes.io/name: cd4pe-issuer
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-issuer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cd4pe-issuer
+      app.kubernetes.io/part-of: cd4pe
+  template:
+    metadata:
+      annotations:
+        checksum/changes: 2fa27b6a8d03ab2b5ef429dab3cc7439d5204762d9164f1e726fc0454450110e
+        kots.io/app-slug: cd4pe
+      labels:
+        app.kubernetes.io/name: cd4pe-issuer
+        app.kubernetes.io/part-of: cd4pe
+        kots.io/app-slug: cd4pe
+        kots.io/backup: velero
+    spec:
+      containers:
+      - args:
+        - -cacert=/ca/tls.crt
+        - -cakey=/ca/tls.key
+        - -subject=cdpev4.westus2.cloudapp.azure.com
+        - -dns=cdpev4.westus2.cloudapp.azure.com
+        - -name=ingress-auto-tls
+        - -label=app.kubernetes.io/part-of=cd4pe
+        - -interval=6h
+        image: proxy.replicated.com/proxy/cd4pe/gcr.io/platform-services-297419/tlser:1.3.2-0e71ceb4
+        imagePullPolicy: IfNotPresent
+        name: issuer-tls
+        resources:
+          limits:
+            cpu: 50m
+            memory: 32Mi
+          requests:
+            cpu: 10m
+            memory: 16Mi
+        securityContext:
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /ca
+          name: ca
+          readOnly: true
+      imagePullSecrets:
+      - name: cd4pe-registry
+      securityContext:
+        fsGroup: 10005
+        runAsGroup: 10005
+        runAsUser: 10005
+      serviceAccountName: cd4pe-issuer
+      volumes:
+      - name: ca
+        secret:
+          secretName: cd4pe-issuer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-object-store-backup
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cd4pe-object-store-backup
+      app.kubernetes.io/part-of: cd4pe
+  template:
+    metadata:
+      annotations:
+        backup.velero.io/backup-volumes: object-store-backup
+        kots.io/app-slug: cd4pe
+        pre.hook.backup.velero.io/command: '["/bin/bash", "-c", "for bucket in cd4pe;
+          do s3cmd sync --no-preserve --stats --stop-on-error --delete-removed s3://${bucket}
+          /backup/${bucket}/; done | grep -v download:"]'
+        pre.hook.backup.velero.io/timeout: 30m
+      labels:
+        app.kubernetes.io/name: cd4pe-object-store-backup
+        app.kubernetes.io/part-of: cd4pe
+        kots.io/app-slug: cd4pe
+        kots.io/backup: velero
+    spec:
+      containers:
+      - args:
+        - -c
+        - |
+          set -e
+
+          # Use the Ceph generated secret if available, otherwise fallback to the provided secret.
+          objs_secret=$(kubectl get secret cd4pe-object-store -o jsonpath='{.data}' || echo)
+          if [ -z "$objs_secret" ]; then
+            objs_secret=$(kubectl get secret object-store -o jsonpath='{.data}')
+            echo "Restoring to MinIO"
+          else
+            echo "Restoring to Ceph"
+          fi
+          endpoint=$(echo $objs_secret | jq -r .endpoint | base64 -d | awk -F/ '{print $3}')
+
+          cat <<EOF > /root/.s3cfg
+            host_base = ${endpoint}
+            host_bucket = ${endpoint}
+            use_https = False
+
+            access_key = $(echo $objs_secret | jq -r .accessKey | base64 -d)
+            secret_key = $(echo $objs_secret | jq -r .secretKey | base64 -d)
+          EOF
+          # Wait for the object store to be available
+          while ! s3cmd ls; do sleep 1; done
+
+          # Restore from backup; overwrite existing files but preserve any new ones.
+          for bucket in cd4pe; do
+            echo "Restoring ${bucket}"
+
+            # Ensure the named bucket exists
+            s3cmd mb s3://${bucket} || true
+
+            if [[ -d /backup/${bucket} ]]; then
+              s3cmd sync --stats --no-preserve --stop-on-error /backup/${bucket}/ s3://${bucket}
+            fi
+          done
+          # Clear backup source after restore succeeds so next Snapshot writes to a clean target.
+          rm -rf /backup/*
+
+          touch /root/.ready
+          echo "Waiting for backup requests"
+          exec sleep 1000000000
+        command:
+        - /bin/bash
+        env:
+        - name: HOME
+          value: /root
+        image: proxy.replicated.com/proxy/cd4pe/gcr.io/platform-services-297419/pe-and-platform/pe-client-tools:19.8.8
+        imagePullPolicy: IfNotPresent
+        name: backup
+        readinessProbe:
+          exec:
+            command:
+            - /usr/bin/test
+            - -f
+            - /root/.ready
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: "1"
+            ephemeral-storage: 10Gi
+            memory: 512Mi
+          requests:
+            cpu: 10m
+            ephemeral-storage: 1Gi
+            memory: 8Mi
+        securityContext:
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /root
+          name: home
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /backup
+          name: object-store-backup
+      imagePullSecrets:
+      - name: cd4pe-registry
+      initContainers:
+      - args:
+        - -c
+        - |
+          set -e
+          user=cd4pe-object-store
+
+          if ! kubectl get namespace rook-ceph; then
+            echo 'Rook-Ceph unavailable, using MinIO'
+            exit 0
+          fi
+
+          # Create a new user for the existing object store
+          cat <<EOF | kubectl -n rook-ceph apply -f -
+          apiVersion: ceph.rook.io/v1
+          kind: CephObjectStoreUser
+          metadata:
+            labels:
+              app.kubernetes.io/part-of: cd4pe
+            name: ${user}
+          spec:
+            store: rook-ceph-store
+            displayName: ${user}
+          EOF
+
+          name=rook-ceph-object-user-rook-ceph-store-${user}
+
+          # Wait for the secret to exist, then copy it
+          while ! kubectl -n rook-ceph get secret ${name}; do sleep 1; done
+          access=$(kubectl -n rook-ceph get secret ${name} -o jsonpath='{.data.AccessKey}' | base64 -d)
+          secret=$(kubectl -n rook-ceph get secret ${name} -o jsonpath='{.data.SecretKey}' | base64 -d)
+
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: cd4pe-object-store
+            labels:
+              app.kubernetes.io/part-of: cd4pe
+          type: Opaque
+          stringData:
+            accessKey: ${access}
+            secretKey: ${secret}
+            endpoint: http://rook-ceph-rgw-rook-ceph-store.rook-ceph
+          EOF
+        command:
+        - /bin/bash
+        image: proxy.replicated.com/proxy/cd4pe/gcr.io/platform-services-297419/pe-and-platform/pe-client-tools:19.8.8
+        imagePullPolicy: IfNotPresent
+        name: fetch-secret
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 32Mi
+        securityContext:
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp
+      securityContext:
+        fsGroup: 10001
+        runAsGroup: 10001
+        runAsUser: 10001
+      serviceAccountName: cd4pe-object-store-backup
+      volumes:
+      - emptyDir: {}
+        name: home
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: object-store-backup
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: query
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: query
+  template:
+    metadata:
+      annotations:
+        kots.io/app-slug: cd4pe
+      labels:
+        app.kubernetes.io/name: query
+        app.kubernetes.io/part-of: cd4pe
+        kots.io/app-slug: cd4pe
+        kots.io/backup: velero
+    spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: cd4pe
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: query
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      automountServiceAccountToken: false
+      containers:
+      - env:
+        - name: WORKSPACE_URL
+          value: http://cd4pe:8080/cd4pe/api/v1
+        - name: PLAYGROUND
+          value: "true"
+        - name: DB_SCHEMA
+          value: estate_reporting
+        - name: ENABLE_REPORT_TEMPLATES
+          value: "true"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_USER
+              name: query-postgres
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: query-postgres
+        - name: DB_ENDPOINT
+          value: postgres://query-postgres:5432/query?sslmode=disable
+        image: gcr.io/estate-reporting/query-service:1.5.1
+        imagePullPolicy: IfNotPresent
+        name: query
+        ports:
+        - containerPort: 8080
+          name: query
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1024Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        securityContext:
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+      securityContext:
+        fsGroup: 10004
+        runAsGroup: 10004
+        runAsUser: 10004
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: ui
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ui
+  template:
+    metadata:
+      annotations:
+        kots.io/app-slug: cd4pe
+      labels:
+        app.kubernetes.io/name: ui
+        app.kubernetes.io/part-of: cd4pe
+        kots.io/app-slug: cd4pe
+        kots.io/backup: velero
+    spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: cd4pe
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ui
+              topologyKey: kubernetes.io/hostname
+            weight: 1
+      automountServiceAccountToken: false
+      containers:
+      - env:
+        - name: CD4PE_ROUTE_PREFIX
+          value: /cd4pe
+        - name: CD4PE_SERVICE
+          value: http://cd4pe:8080
+        - name: QUERY_SERVICE
+          value: https://cdpev4.westus2.cloudapp.azure.com
+        - name: ENABLE_NATIVE_ER
+          value: "true"
+        - name: TEAMS_UI_VERSION
+          value: 4.9.0
+        - name: PUPPET_CONNECT
+          value: "false"
+        image: proxy.replicated.com/proxy/cd4pe/gcr.io/platform-services-297419/teams-ui:1.7.0
+        imagePullPolicy: IfNotPresent
+        name: ui
+        ports:
+        - containerPort: 3000
+          name: ui
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+        resources:
+          limits:
+            cpu: "1"
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 32Mi
+        securityContext:
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+      imagePullSecrets:
+      - name: cd4pe-registry
+      securityContext:
+        fsGroup: 10004
+        runAsGroup: 10004
+        runAsUser: 10004
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: minio
+spec:
+  podManagementPolicy: Parallel
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: minio
+  serviceName: minio-internal
+  template:
+    metadata:
+      annotations:
+        kots.io/app-slug: cd4pe
+      labels:
+        app.kubernetes.io/name: minio
+        app.kubernetes.io/part-of: cd4pe
+        kots.io/app-slug: cd4pe
+        kots.io/backup: velero
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+            weight: 1
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: minio
+                  app.kubernetes.io/part-of: cd4pe
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - server
+        - /data
+        env:
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: accessKey
+              name: object-store
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: secretKey
+              name: object-store
+        - name: MINIO_BROWSER
+          value: "off"
+        image: proxy.replicated.com/proxy/cd4pe/gcr.io/platform-services-297419/minio:RELEASE.2021-04-22T15-44-28Z-4f39c3fa
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: 9000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        name: minio
+        ports:
+        - containerPort: 9000
+          name: minio
+        readinessProbe:
+          httpGet:
+            path: /minio/health/ready
+            port: 9000
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1024Mi
+          requests:
+            cpu: 25m
+            memory: 128Mi
+        securityContext:
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /.minio
+          name: config
+        - mountPath: /data
+          name: data
+      hostname: minio
+      imagePullSecrets:
+      - name: cd4pe-registry
+      securityContext:
+        fsGroup: 10002
+        runAsGroup: 10002
+        runAsUser: 10002
+      volumes:
+      - emptyDir: {}
+        name: config
+  volumeClaimTemplates:
+  - metadata:
+      labels:
+        app.kubernetes.io/part-of: cd4pe
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: cd4pe-postgres
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: postgres
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cd4pe-postgres
+  serviceName: postgres
+  template:
+    metadata:
+      annotations:
+        backup.velero.io/backup-volumes: backup
+        checksum/changes: c95cbc27e6e74782d9520f5ee5e79f3b00fa841fe650de797b883d5d58eb146b
+        kots.io/app-slug: cd4pe
+        pre.hook.backup.velero.io/command: '["/bin/bash", "-c", "set -o pipefail;
+          pg_dumpall -U postgres --database=${POSTGRESQL_DATABASE:-\"${POSTGRES_DB:-postgres}\"}
+          | gzip > /backup/backup.sql.gz"]'
+        pre.hook.backup.velero.io/timeout: 10m
+      labels:
+        app.kubernetes.io/name: cd4pe-postgres
+        app.kubernetes.io/part-of: cd4pe
+        kots.io/app-slug: cd4pe
+        kots.io/backup: velero
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+            weight: 1
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: cd4pe-postgres
+                  app.kubernetes.io/part-of: cd4pe
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      automountServiceAccountToken: false
+      containers:
+      - args: null
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: POSTGRES_INITDB_ARGS
+          value: --auth-host=scram-sha-256
+        - name: POSTGRESQL_INITSCRIPTS_USERNAME
+          value: postgres
+        envFrom:
+        - secretRef:
+            name: cd4pe-postgres
+        image: proxy.replicated.com/proxy/cd4pe/gcr.io/platform-services-297419/postgresql:12.8.0-6a79d0bd
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /usr/lib/postgresql/12/bin/pg_ctl
+              - stop
+              - --mode=fast
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -i
+            - -c
+            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        name: postgres
+        ports:
+        - containerPort: 5432
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -i
+            - -c
+            - pg_isready -U $POSTGRES_USER -h 127.0.0.1 -p 5432
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: "4"
+            ephemeral-storage: 20Gi
+            memory: 2048Mi
+          requests:
+            cpu: 100m
+            ephemeral-storage: 1Gi
+            memory: 64Mi
+        securityContext:
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: data
+        - mountPath: /docker-entrypoint-initdb.d
+          name: entrypoint
+        - mountPath: /backup
+          name: backup
+        - mountPath: /var/run/postgresql
+          name: run
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /bitnami/postgresql
+          name: postgresql-base
+        - mountPath: /bitnami/postgresql/conf
+          name: postgresql-config
+        - mountPath: /opt/bitnami/postgresql/conf
+          name: postgresql-opt-config
+        - mountPath: /opt/bitnami/postgresql/conf/conf.d
+          name: postgresql-opt-configd
+        - mountPath: /opt/bitnami/postgresql/tmp
+          name: postgresql-opt-tmp
+      hostname: postgres
+      imagePullSecrets:
+      - name: cd4pe-registry
+      securityContext:
+        fsGroup: 10003
+        runAsGroup: 10003
+        runAsUser: 10003
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - name: entrypoint
+        projected:
+          sources:
+          - configMap:
+              name: postgres-init
+          - configMap:
+              name: cd4pe-postgres-initdb
+      - emptyDir: {}
+        name: backup
+      - emptyDir: {}
+        name: run
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: postgresql-opt-config
+      - emptyDir: {}
+        name: postgresql-opt-configd
+      - emptyDir: {}
+        name: postgresql-opt-tmp
+      - emptyDir: {}
+        name: postgresql-base
+      - configMap:
+          name: postgres-configuration
+        name: postgresql-config
+  volumeClaimTemplates:
+  - metadata:
+      labels:
+        app.kubernetes.io/part-of: cd4pe
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 20Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: query-postgres
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query-postgres
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: query-postgres
+  serviceName: query-postgres
+  template:
+    metadata:
+      annotations:
+        backup.velero.io/backup-volumes: backup
+        kots.io/app-slug: cd4pe
+        pre.hook.backup.velero.io/command: '["/bin/bash", "-c", "set -o pipefail;
+          pg_dumpall -U postgres --database=${POSTGRESQL_DATABASE:-\"${POSTGRES_DB:-postgres}\"}
+          | gzip > /backup/backup.sql.gz"]'
+        pre.hook.backup.velero.io/timeout: 10m
+      labels:
+        app.kubernetes.io/name: query-postgres
+        app.kubernetes.io/part-of: cd4pe
+        kots.io/app-slug: cd4pe
+        kots.io/backup: velero
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+            weight: 1
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: query-postgres
+                  app.kubernetes.io/part-of: cd4pe
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      automountServiceAccountToken: false
+      containers:
+      - args: null
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: POSTGRES_INITDB_ARGS
+          value: --auth-host=scram-sha-256
+        - name: POSTGRESQL_INITSCRIPTS_USERNAME
+          value: postgres
+        envFrom:
+        - secretRef:
+            name: query-postgres
+        image: proxy.replicated.com/proxy/cd4pe/gcr.io/platform-services-297419/postgresql:12.8.0-6a79d0bd
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /usr/lib/postgresql/12/bin/pg_ctl
+              - stop
+              - --mode=fast
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -i
+            - -c
+            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        name: query-postgres
+        ports:
+        - containerPort: 5432
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -i
+            - -c
+            - pg_isready -U $POSTGRES_USER -h 127.0.0.1 -p 5432
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: "4"
+            ephemeral-storage: 5Gi
+            memory: 2048Mi
+          requests:
+            cpu: 100m
+            ephemeral-storage: 1Gi
+            memory: 64Mi
+        securityContext:
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: data
+        - mountPath: /docker-entrypoint-initdb.d
+          name: entrypoint
+        - mountPath: /backup
+          name: backup
+        - mountPath: /var/run/postgresql
+          name: run
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /bitnami/postgresql
+          name: postgresql-base
+        - mountPath: /bitnami/postgresql/conf
+          name: postgresql-config
+        - mountPath: /opt/bitnami/postgresql/conf
+          name: postgresql-opt-config
+        - mountPath: /opt/bitnami/postgresql/conf/conf.d
+          name: postgresql-opt-configd
+        - mountPath: /opt/bitnami/postgresql/tmp
+          name: postgresql-opt-tmp
+      hostname: query-postgres
+      imagePullSecrets:
+      - name: cd4pe-registry
+      securityContext:
+        fsGroup: 10003
+        runAsGroup: 10003
+        runAsUser: 10003
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - name: entrypoint
+        projected:
+          sources:
+          - configMap:
+              name: query-postgres-init
+      - emptyDir: {}
+        name: backup
+      - emptyDir: {}
+        name: run
+      - emptyDir: {}
+        name: tmp
+      - emptyDir: {}
+        name: postgresql-opt-config
+      - emptyDir: {}
+        name: postgresql-opt-configd
+      - emptyDir: {}
+        name: postgresql-opt-tmp
+      - emptyDir: {}
+        name: postgresql-base
+      - configMap:
+          name: query-postgres-configuration
+        name: postgresql-config
+  volumeClaimTemplates:
+  - metadata:
+      labels:
+        app.kubernetes.io/part-of: cd4pe
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: cd4pe
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cd4pe
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: minio
+spec:
+  maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: minio
+      app.kubernetes.io/part-of: cd4pe
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: cd4pe-postgres
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: postgres
+spec:
+  maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cd4pe-postgres
+      app.kubernetes.io/part-of: cd4pe
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+    kots.io/exclude: "false"
+  labels:
+    app.kubernetes.io/name: query
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query
+spec:
+  maxUnavailable: 50%
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: query
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: query-postgres
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query-postgres
+spec:
+  maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: query-postgres
+      app.kubernetes.io/part-of: cd4pe
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+    kots.io/exclude: "false"
+  labels:
+    app.kubernetes.io/name: ui
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: ui
+spec:
+  maxUnavailable: 50%
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ui
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+    kots.io/hook-delete-policy: hook-succeeded
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-object-store-minio-bucket
+spec:
+  template:
+    metadata:
+      annotations:
+        kots.io/app-slug: cd4pe
+      labels:
+        app.kubernetes.io/name: cd4pe-object-store-minio-bucket
+        app.kubernetes.io/part-of: cd4pe
+        kots.io/app-slug: cd4pe
+        kots.io/backup: velero
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - -c
+        - |
+          # Wait for MinIO to be ready.
+          while ! mc config host add minio ${MINIO_ENDPOINT} ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}; do sleep 1; done
+
+          # Ensure the named buckets exist
+          mc mb --ignore-existing minio/cd4pe
+        command:
+        - /bin/sh
+        env:
+        - name: MINIO_ENDPOINT
+          value: http://minio:9000
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: accessKey
+              name: object-store
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: secretKey
+              name: object-store
+        image: proxy.replicated.com/proxy/cd4pe/gcr.io/platform-services-297419/mc:RELEASE.2020-11-25T23-04-07Z
+        imagePullPolicy: IfNotPresent
+        name: create-buckets
+        resources:
+          limits:
+            cpu: 50m
+            memory: 32Mi
+          requests:
+            cpu: 10m
+            memory: 8Mi
+        securityContext:
+          capabilities:
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /.mc
+          name: mc-config
+      imagePullSecrets:
+      - name: cd4pe-registry
+      restartPolicy: OnFailure
+      securityContext:
+        fsGroup: 10001
+        runAsGroup: 10001
+        runAsUser: 10001
+      volumes:
+      - emptyDir: {}
+        name: mc-config
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe
+spec:
+  ingress:
+  - ports:
+    - port: 8000
+      protocol: TCP
+    - port: 8080
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cd4pe
+      app.kubernetes.io/part-of: cd4pe
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-allow-all-egress
+spec:
+  egress:
+  - {}
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: cd4pe
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe-deny-all-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: cd4pe
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: minio
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: cd4pe-object-store-backup
+          app.kubernetes.io/part-of: cd4pe
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: minio
+          app.kubernetes.io/part-of: cd4pe
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: cd4pe-object-store-minio-bucket
+          app.kubernetes.io/part-of: cd4pe
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: cd4pe
+          app.kubernetes.io/part-of: cd4pe
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: cd4pe-migrate
+          app.kubernetes.io/part-of: cd4pe
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: minio
+      app.kubernetes.io/part-of: cd4pe
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: cd4pe-postgres
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: postgres
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: cd4pe
+          app.kubernetes.io/part-of: cd4pe
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cd4pe-postgres
+      app.kubernetes.io/part-of: cd4pe
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query
+spec:
+  ingress:
+  - ports:
+    - port: 8080
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: query
+      app.kubernetes.io/part-of: cd4pe
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/name: query-postgres
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: query-postgres
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: query
+          app.kubernetes.io/part-of: cd4pe
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: query-postgres
+      app.kubernetes.io/part-of: cd4pe
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    kots.io/app-slug: cd4pe
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: ui
+spec:
+  ingress:
+  - ports:
+    - port: 3000
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: ui
+      app.kubernetes.io/part-of: cd4pe
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+    kots.io/app-slug: cd4pe
+    kots.io/placeholder: "true"
+    projectcontour.io/response-timeout: infinite
+  labels:
+    app.kubernetes.io/part-of: cd4pe
+    kots.io/app-slug: cd4pe
+    kots.io/backup: velero
+  name: cd4pe
+spec:
+  rules:
+  - host: cdpev4.westus2.cloudapp.azure.com
+    http:
+      paths:
+      - backend:
+          serviceName: ui
+          servicePort: 3000
+      - backend:
+          serviceName: query
+          servicePort: 8080
+        path: /query
+      - backend:
+          serviceName: query
+          servicePort: 8080
+        path: /export
+      - backend:
+          serviceName: query
+          servicePort: 8080
+        path: /workspace
+  tls:
+  - hosts:
+    - cdpev4.westus2.cloudapp.azure.com
+    secretName: ingress-auto-tls
